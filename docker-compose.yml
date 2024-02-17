@@ -1,0 +1,14 @@
+version: "3.8"
+
+services:
+  awslocal:
+    container_name: awslocal
+    image: localstack/localstack
+    ports:
+      - "4566:4566"
+      - "4510-4559:4510-4559"
+    environment:
+      - SERVICES=ssm,cloudformation
+    volumes:
+      - "./src/main/resources/localstack/boardgamemanager:/etc/localstack/boardgamemanager"
+      - "./src/main/resources/localstack/init:/etc/localstack/init"

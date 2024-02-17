@@ -1,0 +1,19 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: A sample template
+Resources:
+  BoardGameGeek_API_URL:
+    Type: "AWS::SSM::Parameter"
+    Properties:
+      Name: "/config/board-game-manager/boardgamegeek.api.url"
+      Description: "The URL for the boardgamegeek.com API"
+      Type: "String"
+      Value: "https://boardgamegeek.com/xmlapi2"
+  Spring_Datasource_Password:
+    Type: "AWS::SSM::Parameter"
+    Properties:
+      Name: "/config/board-game-manager/spring.datasource.password"
+      Description: "The password used to connect to the PostgreSQL database"
+      # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ssm-parameter.html
+      # Although SecureString is included in the list of valid values, AWS CloudFormation does not currently support creating a SecureString parameter type.
+      Type: "String"
+      Value: "mytopsecretpassword"

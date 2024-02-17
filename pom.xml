@@ -12,25 +12,73 @@
 	<artifactId>boardgamemanager</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>boardgamemanager</name>
-	<description>Demo project for Spring Boot</description>
+	<description>A Spring Boot 3 cloud application to organize my board game predilections</description>
+
 	<properties>
 		<java.version>21</java.version>
 	</properties>
+
 	<dependencies>
+
+		<!-- Spring Boot Starter Web -->
+		<!-- Starter for building web, including RESTful, applications using Spring MVC. Uses Tomcat as the default embedded container -->
+		<!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-web -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
 
+		<!-- Spring Boot Starter Actuator -->
+		<!-- Starter for using Spring Boot's Actuator which provides production ready features to help you monitor and manage your application -->
+		<!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-actuator -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
+
+		<!-- AWS Java SDK For The AWS Simple Systems Management (SSM) Service -->
+		<!-- The AWS Java SDK for AWS Simple Systems Management Service holds the client classes that are used for communicating with the AWS Simple Systems Management Service -->
+		<!-- https://mvnrepository.com/artifact/com.amazonaws/aws-java-sdk-ssm -->
+		<dependency>
+			<groupId>com.amazonaws</groupId>
+			<artifactId>aws-java-sdk-ssm</artifactId>
+			<version>1.12.660</version>
+		</dependency>
+
+		<!-- Atlassian Fugue -->
+		<!-- A collection of utilities supporting Functional Programming -->
+		<!-- https://mvnrepository.com/artifact/io.atlassian.fugue/fugue -->
+		<dependency>
+			<groupId>io.atlassian.fugue</groupId>
+			<artifactId>fugue</artifactId>
+			<version>4.5.1</version>
+		</dependency>
+
+		<!-- Apache Commons Lang -->
+		<!-- A package of Java utility classes for the classes that are in java.lang's hierarchy, or are considered to be so standard as to justify existence in java.lang. -->
+		<!-- https://mvnrepository.com/artifact/org.apache.commons/commons-lang3/3.14.0 -->
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+			<version>3.14.0</version>
+		</dependency>
+
+		<!-- Guava: Google Core Libraries For Java -->
+		<!-- Guava is a suite of core and expanded libraries that include utility classes, Google's collections, I/O classes, and much more. -->
+		<!-- https://mvnrepository.com/artifact/com.google.guava/guava -->
+		<dependency>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+			<version>33.0.0-jre</version>
+		</dependency>
+
+		<!-- Spring Boot Starter Test -->
+		<!-- Starter for testing Spring Boot applications with libraries including JUnit Jupiter, Hamcrest and Mockito -->
+		<!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-test -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-actuator</artifactId>
 		</dependency>
 
 	</dependencies>
@@ -49,6 +97,7 @@
 				<configuration>
 					<excludes>
 						<exclude>com/irostec/boardgamemanager/BoardGameManagerApplication.class</exclude>
+						<exclude>com/irostec/boardgamemanager/configuration/*</exclude>
 					</excludes>
 				</configuration>
 				<executions>

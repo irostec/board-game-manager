@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: board-game-manager
+
+aws:
+  localStack:
+      enabled: ${LOCALSTACK_ENABLED}
+      endpoint:
+        url: ${AWS_ENDPOINT_URL}
+  paramstore:
+    prefix: /config
+    defaultContext: board-game-manager
+    profileSeparator: _
