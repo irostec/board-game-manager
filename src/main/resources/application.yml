@@ -11,3 +11,11 @@ aws:
     prefix: /config
     defaultContext: board-game-manager
     profileSeparator: _
+
+splunk:
+  http:
+    url: ${SPLUNK_HTTP_URL}
+    token: ${SPLUNK_HTTP_TOKEN}
+    host: ${SPLUNK_HTTP_HOST}
+    index: ${SPLUNK_HTTP_INDEX}
+    source: ${SPLUNK_HTTP_SOURCE}

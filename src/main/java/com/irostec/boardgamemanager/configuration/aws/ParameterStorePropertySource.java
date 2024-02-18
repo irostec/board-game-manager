@@ -2,12 +2,23 @@ package com.irostec.boardgamemanager.configuration.aws;
 
 import com.amazonaws.services.simplesystemsmanagement.AWSSimpleSystemsManagement;
 import com.amazonaws.services.simplesystemsmanagement.model.GetParameterRequest;
+import com.amazonaws.services.simplesystemsmanagement.model.Parameter;
+
 import com.irostec.boardgamemanager.configuration.aws.dataclass.ParameterStoreProperties;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.core.env.PropertySource;
 import org.springframework.core.env.Environment;
-import io.atlassian.fugue.Checked;
-import com.google.common.base.Defaults;
+
+import static org.apache.commons.lang3.StringUtils.startsWithAny;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static com.irostec.boardgamemanager.common.utils.LoggingUtils.info;
+import static com.irostec.boardgamemanager.common.utils.LoggingUtils.warn;
+import static com.google.common.base.Defaults.defaultValue;
+
+import io.atlassian.fugue.Checked;
+import io.atlassian.fugue.Try;
 
 import java.util.Arrays;
 import java.util.Optional;
@@ -22,6 +33,9 @@ import java.util.Optional;
  * @see <a href="https://docs.aws.amazon.com/sdkref/latest/guide/feature-ss-endpoints.html">the AWS SDKs and Tools Reference Guide</a> for more information about the AWS SDK support for custom endpoints.
  */
 class ParameterStorePropertySource extends PropertySource<AWSSimpleSystemsManagement> {
+
+    private static final String[] VALID_PARAMETER_PREFIXES = {"boardgamegeek.", "spring.datasource."};
+    private final Logger logger = LogManager.getLogger(ParameterStorePropertySource.class);
 
     private static final String SEPARATOR = "/";
 
@@ -39,16 +53,18 @@ class ParameterStorePropertySource extends PropertySource<AWSSimpleSystemsManage
     }
 
     @Override
-    public String getProperty(String parameter) {
+    public String getProperty(String parameterName) {
 
-        return Arrays.stream(this.environment.getActiveProfiles())
-                .map(activeProfile -> getParameterValue(Optional.of(activeProfile), parameter))
+        return !startsWithAny(parameterName, VALID_PARAMETER_PREFIXES) ?
+                defaultValue(String.class) :
+                Arrays.stream(this.environment.getActiveProfiles())
+                .map(activeProfile -> getParameterValue(Optional.of(activeProfile), parameterName))
                 .findFirst()
-                .orElseGet(() -> getParameterValue(Optional.empty(), parameter));
+                .orElseGet(() -> getParameterValue(Optional.empty(), parameterName));
 
     }
 
-    private String getParameterValue(Optional<String> profileContainer, String parameter) {
+    private String getParameterValue(Optional<String> profileContainer, String parameterName) {
 
         final String profileSuffix =
                 profileContainer.map(profile -> parameterStoreProperties.parameterStoreProfileSeparator() + profile)
@@ -56,17 +72,28 @@ class ParameterStorePropertySource extends PropertySource<AWSSimpleSystemsManage
 
         final String expandedContext = parameterStoreProperties.parameterStoreDefaultContext() + profileSuffix;
 
-        final String parameterName = String.join(SEPARATOR,
+        final String expandedParameterName = String.join(SEPARATOR,
                 parameterStoreProperties.parameterStorePrefix(),
                 expandedContext,
-                parameter);
+                parameterName);
+
+        final String methodName = "getParameterValue";
 
         GetParameterRequest parameterRequest = new GetParameterRequest()
-                .withName(parameterName)
+                .withName(expandedParameterName)
                 .withWithDecryption(true);
 
-        return Checked.of(() -> source.getParameter(parameterRequest).getParameter().getValue())
-                .getOrElse(() -> Defaults.defaultValue(String.class));
+        info(logger, methodName, "Attempting to retrieve parameter with request {}", parameterRequest);
+
+        Try<Parameter> tentativeParameter = Checked.of(() -> source.getParameter(parameterRequest).getParameter());
+
+        return tentativeParameter.fold(
+                exception -> {
+                    warn(logger, methodName, exception);
+                    return defaultValue(String.class);
+                },
+                Parameter::getValue
+        );
 
     }
 

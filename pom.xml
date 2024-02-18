@@ -18,6 +18,18 @@
 		<java.version>21</java.version>
 	</properties>
 
+	<repositories>
+
+		<!-- Install Splunk logging for Java -->
+		<!-- https://dev.splunk.com/enterprise/docs/devtools/java/logging-java/getstartedloggingjava/installloggingjava/ -->
+		<repository>
+			<id>splunk-artifactory</id>
+			<name>Splunk Releases</name>
+			<url>https://splunk.jfrog.io/splunk/ext-releases-local</url>
+		</repository>
+
+	</repositories>
+
 	<dependencies>
 
 		<!-- Spring Boot Starter Web -->
@@ -26,6 +38,31 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
+			<exclusions>
+				<!-- By default, Spring Boot uses Logback as a logging method. If you want to replace it with Log4J, you first need to exclude it from the dependencies. -->
+				<!-- Configure Log4j for Logging -->
+				<!-- https://docs.spring.io/spring-boot/docs/2.0.x/reference/html/howto-logging.html#howto-configure-log4j-for-logging -->
+				<exclusion>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-starter-logging</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
+		<!-- Spring Boot Starter Log4j2 -->
+		<!-- Starter for using Log4j2 for logging. An alternative to spring-boot-starter-logging -->
+		<!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-log4j2 -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-log4j2</artifactId>
+		</dependency>
+
+		<!-- Splunk Library Javalogging -->
+		<!-- https://mvnrepository.com/artifact/com.splunk.logging/splunk-library-javalogging -->
+		<dependency>
+			<groupId>com.splunk.logging</groupId>
+			<artifactId>splunk-library-javalogging</artifactId>
+			<version>1.8.0</version>
 		</dependency>
 
 		<!-- Spring Boot Starter Actuator -->
@@ -43,6 +80,12 @@
 			<groupId>com.amazonaws</groupId>
 			<artifactId>aws-java-sdk-ssm</artifactId>
 			<version>1.12.660</version>
+			<exclusions>
+				<exclusion>
+					<groupId>commons-logging</groupId>
+					<artifactId>commons-logging</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 		<!-- Atlassian Fugue -->
@@ -97,7 +140,8 @@
 				<configuration>
 					<excludes>
 						<exclude>com/irostec/boardgamemanager/BoardGameManagerApplication.class</exclude>
-						<exclude>com/irostec/boardgamemanager/configuration/*</exclude>
+						<exclude>com/irostec/boardgamemanager/configuration/**/*</exclude>
+						<exclude>com/irostec/boardgamemanager/common/utils/LoggingUtils.class</exclude>
 					</excludes>
 				</configuration>
 				<executions>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- https://logging.apache.org/log4j/2.x/manual/configuration.html -->
+<!-- https://github.com/Java-Techie-jt/splunk-logging/blob/main/src/main/resources/log4j2-spring.xml -->
+<Configuration>
+    <Appenders>
+        <Console name="console" target="SYSTEM_OUT">
+            <PatternLayout
+                    pattern="%d %p %c{1.} [%t] ${spring:spring.application.name} %m%n" />
+        </Console>
+        <SplunkHttp
+                name="splunkhttp"
+                url="${spring:splunk.http.url}"
+                token="${spring:splunk.http.token}"
+                host="${spring:splunk.http.host}"
+                index="${spring:splunk.http.index}"
+                type="raw"
+                source="${spring:splunk.http.source}"
+                sourcetype="log4j"
+                messageFormat="text"
+                disableCertificateValidation="true">
+            <PatternLayout pattern="%m" />
+        </SplunkHttp>
+
+    </Appenders>
+
+    <Loggers>
+        <!-- LOG everything at INFO level -->
+        <Root level="info">
+            <AppenderRef ref="console" />
+            <AppenderRef ref="splunkhttp" />
+        </Root>
+    </Loggers>
+</Configuration>

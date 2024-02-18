@@ -3,7 +3,7 @@ version: "3.8"
 services:
   awslocal:
     container_name: awslocal
-    image: localstack/localstack
+    image: localstack/localstack:3.1
     ports:
       - "4566:4566"
       - "4510-4559:4510-4559"
@@ -12,3 +12,13 @@ services:
     volumes:
       - "./src/main/resources/localstack/boardgamemanager:/etc/localstack/boardgamemanager"
       - "./src/main/resources/localstack/init:/etc/localstack/init"
+  splunk:
+    container_name: splunk
+    image: splunk/splunk:9.2
+    ports:
+      - "8000:8000" # Port for Splunk server
+      - "8088:8088" # HEC port number
+    environment:
+      - SPLUNK_START_ARGS=--accept-license
+      - SPLUNK_HEC_TOKEN=7f99549c-adfb-482b-af62-c3b3dc103edd
+      - SPLUNK_PASSWORD=splunk_password
