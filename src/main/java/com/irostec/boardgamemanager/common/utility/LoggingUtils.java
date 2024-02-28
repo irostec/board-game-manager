@@ -1,4 +1,4 @@
-package com.irostec.boardgamemanager.common.utils;
+package com.irostec.boardgamemanager.common.utility;
 
 import org.apache.logging.log4j.Logger;
 
@@ -14,8 +14,8 @@ public final class LoggingUtils {
         return "Method " + methodName + ": " + message;
     }
 
-    public static void info(Logger logger, String methodName, String message, Object parameter) {
-        logger.info(expandedMessage(methodName, message), parameter);
+    public static void info(Logger logger, String methodName, String message) {
+        logger.info(expandedMessage(methodName, message));
     }
 
     public static void error(Logger logger, String methodName, Exception ex) {

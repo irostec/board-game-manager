@@ -115,6 +115,52 @@
 			<version>33.0.0-jre</version>
 		</dependency>
 
+		<!-- Project Lombok -->
+		<!-- https://mvnrepository.com/artifact/org.projectlombok/lombok -->
+		<!-- Lombok is a Java library that provides annotations to simplify Java development by automating the generation of boilerplate code -->
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<version>1.18.30</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<!-- JAXB Runtime -->
+		<!-- JAXB (JSR 222) Reference Implementation -->
+		<!-- https://mvnrepository.com/artifact/org.glassfish.jaxb/jaxb-runtime -->
+		<dependency>
+			<groupId>org.glassfish.jaxb</groupId>
+			<artifactId>jaxb-runtime</artifactId>
+			<version>4.0.4</version>
+		</dependency>
+
+		<!-- MapStruct Core -->
+		<!-- An annotation processor for generating type-safe bean mappers -->
+		<!-- https://mvnrepository.com/artifact/org.mapstruct/mapstruct -->
+		<dependency>
+			<groupId>org.mapstruct</groupId>
+			<artifactId>mapstruct</artifactId>
+			<version>1.6.0.Beta1</version>
+		</dependency>
+
+		<!-- MapStruct Processor -->
+		<!-- An annotation processor for generating type-safe bean mappers -->
+		<!-- https://mvnrepository.com/artifact/org.mapstruct/mapstruct-processor -->
+		<dependency>
+			<groupId>org.mapstruct</groupId>
+			<artifactId>mapstruct-processor</artifactId>
+			<version>1.5.5.Final</version>
+		</dependency>
+
+		<!-- Retrofit -->
+		<!-- A type-safe HTTP client for Android and Java. -->
+		<!-- https://mvnrepository.com/artifact/com.squareup.retrofit2/retrofit -->
+		<dependency>
+			<groupId>com.squareup.retrofit2</groupId>
+			<artifactId>retrofit</artifactId>
+			<version>2.9.0</version>
+		</dependency>
+
 		<!-- Spring Boot Starter Test -->
 		<!-- Starter for testing Spring Boot applications with libraries including JUnit Jupiter, Hamcrest and Mockito -->
 		<!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-test -->
@@ -128,10 +174,6 @@
 
 	<build>
 		<plugins>
-			<plugin>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-maven-plugin</artifactId>
-			</plugin>
 
 			<plugin>
 				<groupId>org.jacoco</groupId>
@@ -139,9 +181,27 @@
 				<version>0.8.11</version>
 				<configuration>
 					<excludes>
+
+						<!-- Tne application's entry point. Nothing to test here-->
 						<exclude>com/irostec/boardgamemanager/BoardGameManagerApplication.class</exclude>
+
+						<!-- Configuration classes. These are Spring-specific and, if they don't work properly, the application just doesn't start, so no need to test them. -->
 						<exclude>com/irostec/boardgamemanager/configuration/**/*</exclude>
-						<exclude>com/irostec/boardgamemanager/common/utils/LoggingUtils.class</exclude>
+
+						<!-- Utility methods for Logging. Should be tested in an ntegration or systems suite. -->
+						<exclude>com/irostec/boardgamemanager/common/utility/LoggingUtils.class</exclude>
+
+						<!-- Exception classes. Nothing of interest to test. -->
+						<exclude>com/irostec/boardgamemanager/common/exception/*</exclude>
+
+						<!-- These are records and value objects. No business logic, so nothing to test. -->
+						<exclude>com/irostec/boardgamemanager/application/**/input/*</exclude>
+
+						<!-- These are records and value objects. No business logic, so nothing to test. -->
+						<exclude>com/irostec/boardgamemanager/application/**/output/*</exclude>
+
+						<!-- These classes depend on direct interactions with external dependencies, and as such their behavior can only be evaluated during integration or systems testing. -->
+						<exclude>com/irostec/boardgamemanager/boundary/**/*</exclude>
 					</excludes>
 				</configuration>
 				<executions>
@@ -164,6 +224,30 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>3.2.5</version>
+			</plugin>
+
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>jaxb2-maven-plugin</artifactId>
+				<version>3.1.0</version>
+				<executions>
+					<execution>
+						<id>xjc</id>
+						<goals>
+							<goal>xjc</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<xjbSources>
+						<xjbSource>src/main/resources/boardgamegeek.com/global.xjb</xjbSource>
+					</xjbSources>
+					<sources>
+						<source>src/main/resources/boardgamegeek.com/boardgames.xsd</source>
+					</sources>
+					<outputDirectory>${basedir}/target/generated-sources/jaxb</outputDirectory>
+					<clearOutputDir>false</clearOutputDir>
+				</configuration>
 			</plugin>
 
 		</plugins>

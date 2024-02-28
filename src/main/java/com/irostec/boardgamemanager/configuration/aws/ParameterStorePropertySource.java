@@ -13,8 +13,8 @@ import org.springframework.core.env.Environment;
 
 import static org.apache.commons.lang3.StringUtils.startsWithAny;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
-import static com.irostec.boardgamemanager.common.utils.LoggingUtils.info;
-import static com.irostec.boardgamemanager.common.utils.LoggingUtils.warn;
+import static com.irostec.boardgamemanager.common.utility.LoggingUtils.info;
+import static com.irostec.boardgamemanager.common.utility.LoggingUtils.warn;
 import static com.google.common.base.Defaults.defaultValue;
 
 import io.atlassian.fugue.Checked;
@@ -35,9 +35,9 @@ import java.util.Optional;
 class ParameterStorePropertySource extends PropertySource<AWSSimpleSystemsManagement> {
 
     private static final String[] VALID_PARAMETER_PREFIXES = {"boardgamegeek.", "spring.datasource."};
-    private final Logger logger = LogManager.getLogger(ParameterStorePropertySource.class);
-
     private static final String SEPARATOR = "/";
+
+    private final Logger logger = LogManager.getLogger(ParameterStorePropertySource.class);
 
     private final Environment environment;
 
@@ -83,7 +83,7 @@ class ParameterStorePropertySource extends PropertySource<AWSSimpleSystemsManage
                 .withName(expandedParameterName)
                 .withWithDecryption(true);
 
-        info(logger, methodName, "Attempting to retrieve parameter with request {}", parameterRequest);
+        info(logger, methodName, String.format("Attempting to retrieve parameter with request %s", parameterRequest));
 
         Try<Parameter> tentativeParameter = Checked.of(() -> source.getParameter(parameterRequest).getParameter());
 

@@ -7,7 +7,7 @@ Resources:
       Name: "/config/board-game-manager/boardgamegeek.api.url"
       Description: "The URL for the boardgamegeek.com API"
       Type: "String"
-      Value: "https://boardgamegeek.com/xmlapi2"
+      Value: "https://boardgamegeek.com/xmlapi2/"
   Spring_Datasource_Password:
     Type: "AWS::SSM::Parameter"
     Properties:

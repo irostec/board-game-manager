@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<jaxb:bindings version="3.0" xmlns:jaxb="https://jakarta.ee/xml/ns/jaxb"
+    xmlns:xjc="http://java.sun.com/xml/ns/jaxb/xjc" xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    jaxb:extensionBindingPrefixes="xjc">
+
+    <jaxb:bindings schemaLocation="boardgames.xsd">
+
+        <jaxb:schemaBindings>
+            <jaxb:package name="com.irostec.boardgamemanager.boundary.shared.bggapi.jaxb.generated" />
+        </jaxb:schemaBindings>
+
+        <jaxb:bindings node = "//xs:element[@name='name']//xs:attribute[@name='value']">
+            <jaxb:property name="val"/>
+        </jaxb:bindings>
+
+        <jaxb:bindings node = "//xs:element[@name='yearpublished']//xs:attribute[@name='value']">
+            <jaxb:property name="val"/>
+        </jaxb:bindings>
+
+        <jaxb:bindings node = "//xs:element[@name='minplayers']//xs:attribute[@name='value']">
+            <jaxb:property name="val"/>
+        </jaxb:bindings>
+
+        <jaxb:bindings node = "//xs:element[@name='maxplayers']//xs:attribute[@name='value']">
+            <jaxb:property name="val"/>
+        </jaxb:bindings>
+
+        <jaxb:bindings node = "//xs:element[@name='poll']//xs:element[@name='results']//xs:element[@name='result']//xs:attribute[@name='value']">
+            <jaxb:property name="val"/>
+        </jaxb:bindings>
+
+        <jaxb:bindings node = "//xs:element[@name='playingtime']//xs:attribute[@name='value']">
+            <jaxb:property name="val"/>
+        </jaxb:bindings>
+
+        <jaxb:bindings node = "//xs:element[@name='minplaytime']//xs:attribute[@name='value']">
+            <jaxb:property name="val"/>
+        </jaxb:bindings>
+
+        <jaxb:bindings node = "//xs:element[@name='maxplaytime']//xs:attribute[@name='value']">
+            <jaxb:property name="val"/>
+        </jaxb:bindings>
+
+        <jaxb:bindings node = "//xs:element[@name='minage']//xs:attribute[@name='value']">
+            <jaxb:property name="val"/>
+        </jaxb:bindings>
+
+        <jaxb:bindings node = "//xs:element[@name='link']//xs:attribute[@name='value']">
+            <jaxb:property name="val"/>
+        </jaxb:bindings>
+
+        <jaxb:bindings node = "//xs:element[@name='usersrated']//xs:attribute[@name='value']">
+            <jaxb:property name="val"/>
+        </jaxb:bindings>
+
+        <jaxb:bindings node = "//xs:element[@name='average']//xs:attribute[@name='value']">
+            <jaxb:property name="val"/>
+        </jaxb:bindings>
+
+        <jaxb:bindings node = "//xs:element[@name='bayesaverage']//xs:attribute[@name='value']">
+            <jaxb:property name="val"/>
+        </jaxb:bindings>
+
+        <jaxb:bindings node = "//xs:element[@name='rank']//xs:attribute[@name='value']">
+            <jaxb:property name="val"/>
+        </jaxb:bindings>
+
+        <jaxb:bindings node = "//xs:element[@name='stddev']//xs:attribute[@name='value']">
+            <jaxb:property name="val"/>
+        </jaxb:bindings>
+
+        <jaxb:bindings node = "//xs:element[@name='median']//xs:attribute[@name='value']">
+            <jaxb:property name="val"/>
+        </jaxb:bindings>
+
+        <jaxb:bindings node = "//xs:element[@name='owned']//xs:attribute[@name='value']">
+            <jaxb:property name="val"/>
+        </jaxb:bindings>
+
+        <jaxb:bindings node = "//xs:element[@name='trading']//xs:attribute[@name='value']">
+            <jaxb:property name="val"/>
+        </jaxb:bindings>
+
+        <jaxb:bindings node = "//xs:element[@name='wanting']//xs:attribute[@name='value']">
+            <jaxb:property name="val"/>
+        </jaxb:bindings>
+
+        <jaxb:bindings node = "//xs:element[@name='wishing']//xs:attribute[@name='value']">
+            <jaxb:property name="val"/>
+        </jaxb:bindings>
+
+        <jaxb:bindings node = "//xs:element[@name='numcomments']//xs:attribute[@name='value']">
+            <jaxb:property name="val"/>
+        </jaxb:bindings>
+
+        <jaxb:bindings node = "//xs:element[@name='numweights']//xs:attribute[@name='value']">
+            <jaxb:property name="val"/>
+        </jaxb:bindings>
+
+        <jaxb:bindings node = "//xs:element[@name='averageweight']//xs:attribute[@name='value']">
+            <jaxb:property name="val"/>
+        </jaxb:bindings>
+
+    </jaxb:bindings>
+
+</jaxb:bindings>
