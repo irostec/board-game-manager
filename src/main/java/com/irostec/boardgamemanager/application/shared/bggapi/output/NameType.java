@@ -1,7 +1,7 @@
 package com.irostec.boardgamemanager.application.shared.bggapi.output;
 
-import com.irostec.boardgamemanager.common.exception.BGMException;
 import java.util.Arrays;
+import java.util.Optional;
 
 /**
  * NameType
@@ -10,12 +10,11 @@ import java.util.Arrays;
 public enum NameType {
     PRIMARY, ALTERNATE;
 
-    public static NameType of(String nameTypeDescription) throws BGMException {
+    public static Optional<NameType> fromName(String name)  {
 
         return Arrays.stream(NameType.values())
-                .filter(nameType -> nameType.name().compareToIgnoreCase(nameTypeDescription) == 0)
-                .findFirst()
-                .orElseThrow(() -> new BGMException(String.format("Unknown NameType description: '%s'", nameTypeDescription)));
+                .filter(nameType -> nameType.name().compareToIgnoreCase(name) == 0)
+                .findFirst();
 
     }
 

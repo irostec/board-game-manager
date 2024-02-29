@@ -6,10 +6,13 @@ import io.atlassian.fugue.Checked;
 import io.atlassian.fugue.Either;
 import org.junit.jupiter.api.Test;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -26,27 +29,58 @@ class ExceptionUtilsTest {
            ExceptionUtils.lift(F);
 
     @Test
-    void givenAMappingFunctionWithExceptionHandling_whenAllTheValuesOfAStreamCanBeSuccessfullyMapped_thenTheNewStreamShouldContainTheMappedValues()
-    throws Exception {
+    void testMapToListWithValidInput() throws BGMException {
 
-        final List<Integer> expected = List.of(0, 1, Integer.MAX_VALUE);
-
-        final Iterable<NonNegativeInteger> result = ExceptionUtils.mapToList(expected.stream(), MAPPING_WITH_EXCEPTION_HANDLING);
-
-        final List<Integer> actual = StreamSupport.stream(result.spliterator(), false)
-                .map(NonNegativeInteger::value)
-                .collect(Collectors.toList());
-
-        assertEquals(expected, actual);
+        testMapToCollection(
+                List.of(0, 1, Integer.MAX_VALUE),
+                stream -> ExceptionUtils.mapToList(stream, MAPPING_WITH_EXCEPTION_HANDLING),
+                Collectors.toList()
+        );
 
     }
 
     @Test
-    void givenAMappingFunctionWithExceptionHandling_whenSomeOfTheValuesOfAStreamCannotBeSuccessfullyMapped_thenTheMappingShouldThrowAnException() {
+    void testMapToSetWithValidInput() throws BGMException {
+
+        testMapToCollection(
+                Set.of(0, 1, Integer.MAX_VALUE),
+                stream -> ExceptionUtils.mapToSet(stream, MAPPING_WITH_EXCEPTION_HANDLING),
+                Collectors.toSet()
+        );
+
+    }
+
+    @Test
+    void testMapToListWithInvalidInput() {
 
         final List<Integer> expected = List.of(0, 1, -1);
 
         assertThrows(BGMException.class, () -> ExceptionUtils.mapToList(expected.stream(), MAPPING_WITH_EXCEPTION_HANDLING));
+
+    }
+
+    @Test
+    void testMapToSetWithInvalidInput() {
+
+        final Set<Integer> expected = Set.of(0, 1, -1);
+
+        assertThrows(BGMException.class, () -> ExceptionUtils.mapToSet(expected.stream(), MAPPING_WITH_EXCEPTION_HANDLING));
+
+    }
+
+    private static <C1 extends Collection<Integer>, C2 extends Collection<NonNegativeInteger>> void testMapToCollection(
+            C1 expectedCollection,
+            Checked.Function<Stream<Integer>, C2, BGMException> mapping,
+            Collector<Integer, ?, C1> collector
+    ) throws BGMException {
+
+        final C2 mappedCollection = mapping.apply(expectedCollection.stream());
+
+        final C1 actualCollection = mappedCollection.stream()
+                .map(NonNegativeInteger::value)
+                .collect(collector);
+
+        assertEquals(expectedCollection, actualCollection);
 
     }
 

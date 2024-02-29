@@ -182,26 +182,18 @@
 				<configuration>
 					<excludes>
 
-						<!-- Tne application's entry point. Nothing to test here-->
+						<!-- Tne application's entry point. Pure configuration, so nothing to test here-->
 						<exclude>com/irostec/boardgamemanager/BoardGameManagerApplication.class</exclude>
+
+						<!-- These classes depend on direct interactions with external dependencies, and as such their behavior can only be evaluated during integration or systems testing. -->
+						<exclude>com/irostec/boardgamemanager/boundary/**/*</exclude>
+
+						<!-- Utility methods for Logging. This is the realm of integrations and systems testing. -->
+						<exclude>com/irostec/boardgamemanager/common/utility/LoggingUtils.class</exclude>
 
 						<!-- Configuration classes. These are Spring-specific and, if they don't work properly, the application just doesn't start, so no need to test them. -->
 						<exclude>com/irostec/boardgamemanager/configuration/**/*</exclude>
 
-						<!-- Utility methods for Logging. Should be tested in an ntegration or systems suite. -->
-						<exclude>com/irostec/boardgamemanager/common/utility/LoggingUtils.class</exclude>
-
-						<!-- Exception classes. Nothing of interest to test. -->
-						<exclude>com/irostec/boardgamemanager/common/exception/*</exclude>
-
-						<!-- These are records and value objects. No business logic, so nothing to test. -->
-						<exclude>com/irostec/boardgamemanager/application/**/input/*</exclude>
-
-						<!-- These are records and value objects. No business logic, so nothing to test. -->
-						<exclude>com/irostec/boardgamemanager/application/**/output/*</exclude>
-
-						<!-- These classes depend on direct interactions with external dependencies, and as such their behavior can only be evaluated during integration or systems testing. -->
-						<exclude>com/irostec/boardgamemanager/boundary/**/*</exclude>
 					</excludes>
 				</configuration>
 				<executions>

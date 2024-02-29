@@ -1,6 +1,7 @@
 package com.irostec.boardgamemanager.common.utility;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.irostec.boardgamemanager.common.exception.BGMException;
 import io.atlassian.fugue.Checked;
 import io.atlassian.fugue.Either;
@@ -8,6 +9,7 @@ import io.atlassian.fugue.Eithers;
 import io.atlassian.fugue.Try;
 
 import java.util.List;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -51,6 +53,15 @@ public final class ExceptionUtils {
     ) throws E {
 
         return ImmutableList.copyOf(map(source, mappingWithExceptionHandling));
+
+    }
+
+    public static <A, B, E extends Exception> Set<B> mapToSet(
+            Stream<A> source,
+            Function<A, Either<E, B>> mappingWithExceptionHandling
+    ) throws E {
+
+        return ImmutableSet.copyOf(map(source, mappingWithExceptionHandling));
 
     }
 

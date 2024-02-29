@@ -5,6 +5,7 @@ import com.irostec.boardgamemanager.common.type.NonNegativeInteger;
 import com.irostec.boardgamemanager.common.type.PositiveInteger;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * BoardGameFromBGG
@@ -21,7 +22,7 @@ public record BoardGameFromBGG (String id,
                                 PositiveInteger minPlaytime,
                                 PositiveInteger maxPlaytime,
                                 NonNegativeInteger minAge,
-                                List<Link> links,
+                                Set<Link> links,
                                 List<Video> videos,
                                 NonNegativeDecimal averageRating
 

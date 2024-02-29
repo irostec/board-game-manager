@@ -1,9 +1,10 @@
 package com.irostec.boardgamemanager.application.fetchboardgamefrombgg.helper;
 
 import com.irostec.boardgamemanager.application.shared.bggapi.output.NameType;
-import com.irostec.boardgamemanager.common.exception.BGMException;
-import org.junit.jupiter.api.Test;
+import com.irostec.boardgamemanager.application.shared.bggapi.output.Name;
 
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
@@ -11,22 +12,15 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 class NameMapperTest {
 
-    @Test
-    void mapName() throws BGMException {
+    @ParameterizedTest
+    @EnumSource(NameType.class)
+    void roundtrip(NameType nameType) {
 
-        final String type = "primary";
+        final Name source = new Name(nameType, "Gloomhaven");
 
-        final com.irostec.boardgamemanager.application.shared.bggapi.output.Name source =
-                new com.irostec.boardgamemanager.application.shared.bggapi.output.Name(
-                        NameType.of(type),
-                "Gloomhaven"
-                );
+        final Name result = NameMapper.INSTANCE.map(NameMapper.INSTANCE.map(source));
 
-        final com.irostec.boardgamemanager.application.fetchboardgamefrombgg.output.Name result =
-                NameMapper.INSTANCE.mapName(source);
-
-        assertEquals(type, result.type());
-        assertEquals(source.value(), result.value());
+        assertEquals(source, result);
 
     }
 
