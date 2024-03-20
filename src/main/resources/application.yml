@@ -2,6 +2,18 @@ spring:
   application:
     name: board-game-manager
 
+management:
+  security:
+    enabled: false # disable the security on the Actuator endpoints.
+  endpoints:
+    web:
+      exposure:
+        include: health, loggers # Enable actuator endpoints
+
+jwt:
+  signing:
+    key: ${JWT_SIGNING_KEY}
+
 aws:
   localStack:
       enabled: ${LOCALSTACK_ENABLED}
@@ -11,6 +23,9 @@ aws:
     prefix: /config
     defaultContext: board-game-manager
     profileSeparator: _
+  dynamodb:
+    user:
+      table: ${AWS_DYNAMODB_USER_TABLE}
 
 splunk:
   http:

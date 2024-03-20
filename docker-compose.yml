@@ -8,7 +8,7 @@ services:
       - "4566:4566"
       - "4510-4559:4510-4559"
     environment:
-      - SERVICES=ssm,cloudformation
+      - SERVICES=ssm,cloudformation,dynamodb
     volumes:
       - "./src/main/resources/localstack/boardgamemanager:/etc/localstack/boardgamemanager"
       - "./src/main/resources/localstack/init:/etc/localstack/init"

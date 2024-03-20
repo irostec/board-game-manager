@@ -49,6 +49,55 @@
 			</exclusions>
 		</dependency>
 
+		<!-- Spring Boot Starter Validation -->
+		<!-- Starter for using Java Bean Validation with Hibernate Validator -->
+		<!-- https://jakarta.ee/specifications/bean-validation/3.0/apidocs/jakarta/validation/constraints/package-summary -->
+		<!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-validation -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-validation</artifactId>
+		</dependency>
+
+		<!-- Spring Boot Starter Security -->
+		<!-- Starter for using Spring Security -->
+		<!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-security -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security</artifactId>
+		</dependency>
+
+
+		<!-- JJWT dependencies for generating and parsing JWTs - Start -->
+
+		<!-- JJWT API -->
+		<!-- https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt-api -->
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-api</artifactId>
+			<version>0.12.5</version>
+		</dependency>
+
+		<!-- JJWT :: Impl -->
+		<!-- https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt-impl -->
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-impl</artifactId>
+			<version>0.12.5</version>
+			<scope>runtime</scope>
+		</dependency>
+
+		<!-- JJWT :: Extensions :: Jackson -->
+		<!-- https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt-jackson -->
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-jackson</artifactId>
+			<version>0.12.5</version>
+			<scope>runtime</scope>
+		</dependency>
+
+		<!-- JJWT dependencies for generating and parsing JWTs - End -->
+
+
 		<!-- Spring Boot Starter Log4j2 -->
 		<!-- Starter for using Log4j2 for logging. An alternative to spring-boot-starter-logging -->
 		<!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-log4j2 -->
@@ -88,6 +137,23 @@
 			</exclusions>
 		</dependency>
 
+		<!-- AWS Java SDK For Amazon DynamoDB » 1.12.676 -->
+		<!-- The AWS Java SDK for Amazon DynamoDB module holds the client classes that are used for communicating with Amazon DynamoDB Service -->
+		<!-- https://mvnrepository.com/artifact/com.amazonaws/aws-java-sdk-dynamodb -->
+		<dependency>
+			<groupId>com.amazonaws</groupId>
+			<artifactId>aws-java-sdk-dynamodb</artifactId>
+			<version>1.12.676</version>
+		</dependency>
+
+		<!-- DynamoDB Enhanced Client -->
+		<!-- https://mvnrepository.com/artifact/software.amazon.awssdk/dynamodb-enhanced -->
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>dynamodb-enhanced</artifactId>
+			<version>2.25.5</version>
+		</dependency>
+
 		<!-- Atlassian Fugue -->
 		<!-- A collection of utilities supporting Functional Programming -->
 		<!-- https://mvnrepository.com/artifact/io.atlassian.fugue/fugue -->
@@ -104,6 +170,21 @@
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-lang3</artifactId>
 			<version>3.14.0</version>
+		</dependency>
+
+		<!-- Apache Commons Validator -->
+		<!-- https://mvnrepository.com/artifact/commons-validator/commons-validator -->
+		<!-- Apache Commons Validator provides the building blocks for both client side validation and server side data validation. -->
+		<dependency>
+			<groupId>commons-validator</groupId>
+			<artifactId>commons-validator</artifactId>
+			<version>1.8.0</version>
+			<exclusions>
+				<exclusion>
+					<groupId>commons-logging</groupId>
+					<artifactId>commons-logging</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 		<!-- Guava: Google Core Libraries For Java -->
@@ -191,8 +272,21 @@
 						<!-- Utility methods for Logging. This is the realm of integrations and systems testing. -->
 						<exclude>com/irostec/boardgamemanager/common/utility/LoggingUtils.class</exclude>
 
-						<!-- Configuration classes. These are Spring-specific and, if they don't work properly, the application just doesn't start, so no need to test them. -->
-						<exclude>com/irostec/boardgamemanager/configuration/**/*</exclude>
+						<!-- AWS configuration classes. These are Spring-specific and, if they don't work properly, the application just doesn't start, so no need to test them. -->
+						<exclude>com/irostec/boardgamemanager/configuration/aws/**/*</exclude>
+
+						<!-- Framework-specific code that can be used by other configuration and boundary classes. -->
+						<exclude>com/irostec/boardgamemanager/configuration/common/**/*</exclude>
+
+						<!-- Components required by Spring Security (annotations, filters, etc.).
+						In case testing is needed, it should be performed on the secured methods, not on the plumbing code. -->
+						<exclude>com/irostec/boardgamemanager/configuration/security/core/**/*</exclude>
+
+						<!-- Configuration of the JWT-related beans -->
+						<exclude>com/irostec/boardgamemanager/configuration/security/token/boundary/**/*</exclude>
+
+						<!-- Configuration of the controllers and database access necessary for user management -->
+						<exclude>com/irostec/boardgamemanager/configuration/security/user/boundary/**/*</exclude>
 
 					</excludes>
 				</configuration>

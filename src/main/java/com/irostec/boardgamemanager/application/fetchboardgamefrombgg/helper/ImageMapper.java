@@ -1,6 +1,5 @@
 package com.irostec.boardgamemanager.application.fetchboardgamefrombgg.helper;
 
-import com.irostec.boardgamemanager.application.shared.bggapi.output.ImageType;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;

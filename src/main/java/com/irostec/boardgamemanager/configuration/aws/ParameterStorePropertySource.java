@@ -34,7 +34,7 @@ import java.util.Optional;
  */
 class ParameterStorePropertySource extends PropertySource<AWSSimpleSystemsManagement> {
 
-    private static final String[] VALID_PARAMETER_PREFIXES = {"boardgamegeek.", "spring.datasource."};
+    private static final String[] VALID_PARAMETER_PREFIXES = {"boardgamegeek.", "aws.dynamodb.", "spring.datasource."};
     private static final String SEPARATOR = "/";
 
     private final Logger logger = LogManager.getLogger(ParameterStorePropertySource.class);

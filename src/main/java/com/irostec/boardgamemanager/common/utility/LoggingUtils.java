@@ -14,6 +14,10 @@ public final class LoggingUtils {
         return "Method " + methodName + ": " + message;
     }
 
+    public static void info(Logger logger, String methodName, String message, Object... objects) {
+        logger.info(expandedMessage(methodName, message), objects);
+    }
+
     public static void info(Logger logger, String methodName, String message) {
         logger.info(expandedMessage(methodName, message));
     }

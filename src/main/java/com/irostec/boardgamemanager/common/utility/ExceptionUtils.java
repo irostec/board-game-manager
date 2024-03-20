@@ -3,16 +3,12 @@ package com.irostec.boardgamemanager.common.utility;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.irostec.boardgamemanager.common.exception.BGMException;
-import io.atlassian.fugue.Checked;
-import io.atlassian.fugue.Either;
-import io.atlassian.fugue.Eithers;
-import io.atlassian.fugue.Try;
+import io.atlassian.fugue.*;
 
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 /**
  * ExceptionUtils
@@ -77,6 +73,16 @@ public final class ExceptionUtils {
     public static <A, B, E extends Exception> Function<A, Either<BGMException, B>> lift(Checked.Function<A,B,E> f) {
 
         return lift(f, BGMException::new);
+
+    }
+
+    public static Try<Unit> toTry(Runnable runnable) {
+
+        return Checked.of(() -> {
+            runnable.run();
+
+            return Unit.VALUE;
+        });
 
     }
 

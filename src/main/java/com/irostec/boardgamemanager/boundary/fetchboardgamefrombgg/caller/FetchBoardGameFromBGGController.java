@@ -7,6 +7,7 @@ import com.irostec.boardgamemanager.common.exception.ExternalServerCallException
 import com.irostec.boardgamemanager.common.exception.ExternalServerHttpException;
 import com.irostec.boardgamemanager.common.exception.NotFoundException;
 import com.irostec.boardgamemanager.common.utility.LoggingUtils;
+import com.irostec.boardgamemanager.configuration.security.core.annotation.HasUserRole;
 import lombok.AllArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -36,6 +37,7 @@ class FetchBoardGameFromBGGController {
     private final FetchBoardGameFromBGG fetchBoardGameFromBGG;
 
     @GetMapping(value = "/boardgamegeek/{externalId}")
+    @HasUserRole
     Map<String, Object> fetchBoardGameFromBGG(@PathVariable String externalId)
             throws BGMException {
 
