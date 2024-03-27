@@ -1,7 +1,8 @@
 package com.irostec.boardgamemanager.application.shared;
 
-import com.irostec.boardgamemanager.common.exception.BGMException;
+import com.irostec.boardgamemanager.application.shared.bggapi.error.BGGApiError;
 import com.irostec.boardgamemanager.application.shared.bggapi.output.BoardGameFromBGG;
+import io.vavr.control.Either;
 
 /**
  * BGGApi
@@ -9,6 +10,6 @@ import com.irostec.boardgamemanager.application.shared.bggapi.output.BoardGameFr
  */
 public interface BGGApi {
 
-    BoardGameFromBGG execute(String externalId) throws BGMException;
+    Either<BGGApiError, BoardGameFromBGG> execute(String externalId);
 
 }

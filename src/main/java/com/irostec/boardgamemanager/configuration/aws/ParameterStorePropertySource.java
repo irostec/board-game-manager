@@ -17,8 +17,7 @@ import static com.irostec.boardgamemanager.common.utility.LoggingUtils.info;
 import static com.irostec.boardgamemanager.common.utility.LoggingUtils.warn;
 import static com.google.common.base.Defaults.defaultValue;
 
-import io.atlassian.fugue.Checked;
-import io.atlassian.fugue.Try;
+import io.vavr.control.Try;
 
 import java.util.Arrays;
 import java.util.Optional;
@@ -85,7 +84,7 @@ class ParameterStorePropertySource extends PropertySource<AWSSimpleSystemsManage
 
         info(logger, methodName, String.format("Attempting to retrieve parameter with request %s", parameterRequest));
 
-        Try<Parameter> tentativeParameter = Checked.of(() -> source.getParameter(parameterRequest).getParameter());
+        Try<Parameter> tentativeParameter = Try.of(() -> source.getParameter(parameterRequest).getParameter());
 
         return tentativeParameter.fold(
                 exception -> {

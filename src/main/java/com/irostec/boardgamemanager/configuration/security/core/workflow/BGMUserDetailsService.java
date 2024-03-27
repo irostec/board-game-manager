@@ -1,9 +1,8 @@
 package com.irostec.boardgamemanager.configuration.security.core.workflow;
 
-import com.irostec.boardgamemanager.configuration.security.user.GetUser;
-import com.irostec.boardgamemanager.configuration.security.user.helper.BGMRoleMapper;
-import com.irostec.boardgamemanager.configuration.security.user.output.BGMUser;
-import io.atlassian.fugue.Checked;
+import com.irostec.boardgamemanager.configuration.security.authentication.application.GetUserService;
+import com.irostec.boardgamemanager.configuration.security.authentication.helper.BGMRoleMapper;
+import com.irostec.boardgamemanager.configuration.security.authentication.application.getuser.output.BGMUser;
 import lombok.AllArgsConstructor;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -19,15 +18,14 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 final class BGMUserDetailsService implements UserDetailsService {
 
-    private final GetUser getUser;
+    private final GetUserService getUserService;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 
-        final BGMUser bgmUser = Checked.of(() -> getUser.execute(username)).fold(
-                exception -> { throw new UsernameNotFoundException("Error retrieving user data", exception); },
-                optionalUser -> optionalUser.orElseThrow(() -> new UsernameNotFoundException("User not found"))
-        );
+        final BGMUser bgmUser = getUserService.execute(username)
+                .getOrElseThrow(error -> new UsernameNotFoundException("Error retrieving the user from the database", error.cause()))
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         return new User(
                 bgmUser.getUsername(),

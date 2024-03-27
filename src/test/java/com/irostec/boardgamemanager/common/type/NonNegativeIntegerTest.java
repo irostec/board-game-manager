@@ -1,11 +1,9 @@
 package com.irostec.boardgamemanager.common.type;
 
-
-import com.irostec.boardgamemanager.common.exception.BGMException;
+import io.vavr.control.Validation;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * NonNegativeIntegerTest
@@ -13,36 +11,40 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  */
 class NonNegativeIntegerTest {
 
+    private static final String PROPERTY_NAME = "nonNegativeIntegerProperty";
+
     @Test
-    void givenANonNegativeInteger_whenItIsInitializedWithANegativeInput_thenAnExceptionShouldBeThrown() {
+    void givenANonNegativeInteger_whenItIsInitializedWithANegativeInput_thenTheValidationShouldFail() {
 
         final int input = -1;
 
-        assertThrows(BGMException.class, () -> new NonNegativeInteger(input));
+        final Validation<String, NonNegativeInteger> result = NonNegativeInteger.of(PROPERTY_NAME, input);
+
+        assertTrue(result.isInvalid());
 
     }
 
     @Test
-    void givenANonNegativeInteger_whenItIsInitializedWithZero_thenTheInitializationShouldSucceed()
-    throws BGMException{
+    void givenANonNegativeInteger_whenItIsInitializedWithZero_thenTheValidationShouldSucceed() {
 
         final int input = 0;
 
-        final NonNegativeInteger result = new NonNegativeInteger(input);
+        final Validation<String, NonNegativeInteger> result = NonNegativeInteger.of(PROPERTY_NAME, input);
 
-        assertEquals(input, result.value());
+        assertTrue(result.isValid());
+        assertEquals(input, result.get().getValue());
 
     }
 
     @Test
-    void givenANonNegativeInteger_whenItIsInitializedWithAPositiveInput_thenTheInitializationShouldSucceed()
-            throws BGMException{
+    void givenANonNegativeInteger_whenItIsInitializedWithAPositiveInput_thenTheValidationShouldSucceed() {
 
         final int input = 1;
 
-        final NonNegativeInteger result = new NonNegativeInteger(input);
+        final Validation<String, NonNegativeInteger> result = NonNegativeInteger.of(PROPERTY_NAME, input);
 
-        assertEquals(input, result.value());
+        assertTrue(result.isValid());
+        assertEquals(input, result.get().getValue());
 
     }
 

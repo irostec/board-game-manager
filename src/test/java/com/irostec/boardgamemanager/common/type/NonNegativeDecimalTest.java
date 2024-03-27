@@ -1,10 +1,9 @@
 package com.irostec.boardgamemanager.common.type;
 
-import com.irostec.boardgamemanager.common.exception.BGMException;
+import io.vavr.control.Validation;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * NonNegativeDecimalTest
@@ -12,36 +11,41 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  */
 class NonNegativeDecimalTest {
 
+    private static final String PROPERTY_NAME = "nonNegativeDecimalProperty";
+
     @Test
-    void givenANonNegativeDecimal_whenItIsInitializedWithANegativeInput_thenAnExceptionShouldBeThrown() {
+    void givenANonNegativeDecimal_whenItIsInitializedWithANegativeInput_thenTheValidationShouldFail() {
 
         final float input = -1.5f;
 
-        assertThrows(BGMException.class, () -> new NonNegativeDecimal(input));
+        final Validation<String, NonNegativeDecimal> result =
+                NonNegativeDecimal.of(PROPERTY_NAME, input);
+
+        assertTrue(result.isInvalid());
 
     }
 
     @Test
-    void givenANonNegativeDecimal_whenItIsInitializedWithZero_thenTheInitializationShouldSucceed()
-            throws BGMException{
+    void givenANonNegativeDecimal_whenItIsInitializedWithZero_thenTheValidationShouldSucceed() {
 
         final float input = 0;
 
-        final NonNegativeDecimal result = new NonNegativeDecimal(input);
+        final Validation<String, NonNegativeDecimal> result = NonNegativeDecimal.of(PROPERTY_NAME, input);
 
-        assertEquals(input, result.value());
+        assertTrue(result.isValid());
+        assertEquals(input, result.get().getValue());
 
     }
 
     @Test
-    void givenANonNegativeDecimal_whenItIsInitializedWithAPositiveInput_thenTheInitializationShouldSucceed()
-            throws BGMException{
+    void givenANonNegativeDecimal_whenItIsInitializedWithAPositiveInput_thenTheValidationShouldSucceed() {
 
         final float input = 1.0f;
 
-        final NonNegativeDecimal result = new NonNegativeDecimal(input);
+        final Validation<String, NonNegativeDecimal> result = NonNegativeDecimal.of(PROPERTY_NAME, input);
 
-        assertEquals(input, result.value());
+        assertTrue(result.isValid());
+        assertEquals(input, result.get().getValue());
 
     }
 

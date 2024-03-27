@@ -2,7 +2,6 @@ package com.irostec.boardgamemanager.application.shared.bggapi.output;
 
 import com.irostec.boardgamemanager.common.type.NonNegativeDecimal;
 import com.irostec.boardgamemanager.common.type.NonNegativeInteger;
-import com.irostec.boardgamemanager.common.type.PositiveInteger;
 
 import java.util.List;
 import java.util.Set;
@@ -16,11 +15,8 @@ public record BoardGameFromBGG (String id,
                                 List<Name> names,
                                 String description,
                                 int yearPublished,
-                                PositiveInteger minPlayers,
-                                PositiveInteger maxPlayers,
-                                PositiveInteger playingTime,
-                                PositiveInteger minPlaytime,
-                                PositiveInteger maxPlaytime,
+                                Players players,
+                                Playtime playtime,
                                 NonNegativeInteger minAge,
                                 Set<Link> links,
                                 List<Video> videos,

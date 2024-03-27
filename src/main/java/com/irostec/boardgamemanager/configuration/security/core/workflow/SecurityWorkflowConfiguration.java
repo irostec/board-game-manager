@@ -1,14 +1,14 @@
 package com.irostec.boardgamemanager.configuration.security.core.workflow;
 
-import com.irostec.boardgamemanager.configuration.security.token.ValidateToken;
-import com.irostec.boardgamemanager.configuration.security.user.GetRolesAndPrivileges;
-import com.irostec.boardgamemanager.configuration.security.user.GetUser;
+import com.irostec.boardgamemanager.configuration.security.authentication.application.GetRolesAndPrivilegesService;
+import com.irostec.boardgamemanager.configuration.security.authentication.application.ParseTokenService;
+import com.irostec.boardgamemanager.configuration.security.authentication.application.GetUserService;
 import com.irostec.boardgamemanager.configuration.security.core.errorhandling.DelegatedAuthenticationEntryPoint;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -27,12 +27,12 @@ import java.util.Map;
  * Configuration of all the components used by Spring Security
  */
 @Configuration
-@EnableGlobalMethodSecurity(prePostEnabled = true)
+@EnableMethodSecurity
 class SecurityWorkflowConfiguration {
 
     @Bean
-    UserDetailsService userDetailsService(GetUser getUser) {
-        return new BGMUserDetailsService(getUser);
+    UserDetailsService userDetailsService(GetUserService getUserService) {
+        return new BGMUserDetailsService(getUserService);
     }
 
     @Bean
@@ -55,9 +55,9 @@ class SecurityWorkflowConfiguration {
     }
 
     @Bean
-    BGMAuthenticationFilter jwtAuthenticationFilter(ValidateToken validateToken,
-                                                    GetRolesAndPrivileges getRolesAndPrivileges) {
-        return new JwtAuthenticationFilter(validateToken, getRolesAndPrivileges);
+    BGMAuthenticationFilter jwtAuthenticationFilter(ParseTokenService parseTokenService,
+                                                    GetRolesAndPrivilegesService getRolesAndPrivilegesService) {
+        return new JwtAuthenticationFilter(parseTokenService, getRolesAndPrivilegesService);
     }
 
     @Bean

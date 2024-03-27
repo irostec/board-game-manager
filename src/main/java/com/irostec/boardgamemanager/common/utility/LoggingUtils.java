@@ -22,12 +22,24 @@ public final class LoggingUtils {
         logger.info(expandedMessage(methodName, message));
     }
 
-    public static void error(Logger logger, String methodName, Exception ex) {
-        logger.error(expandedMessage(methodName, "Exception: "), ex);
+    public static void error(Logger logger, String methodName, Throwable exception) {
+        error(logger, methodName, "Exception: ", exception);
     }
 
-    public static void warn(Logger logger, String methodName, Exception ex) {
-        logger.warn(expandedMessage(methodName, "Exception: "), ex);
+    public static void error(Logger logger, String methodName, String message) {
+        logger.error(expandedMessage(methodName, message));
+    }
+
+    public static void error(Logger logger, String methodName, String message, Throwable exception) {
+        logger.error(expandedMessage(methodName, message), exception);
+    }
+
+    public static void warn(Logger logger, String methodName, Throwable exception) {
+        warn(logger, expandedMessage(methodName, "Exception: "), exception);
+    }
+
+    public static void warn(Logger logger, String methodName, String message, Throwable exception) {
+        logger.warn(expandedMessage(methodName, message), exception);
     }
 
 }

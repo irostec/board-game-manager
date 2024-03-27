@@ -7,6 +7,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerExceptionResolver;
+import static com.google.common.base.Defaults.defaultValue;
 
 /**
  * DelegatedAuthenticationEntryPoint
@@ -25,7 +26,7 @@ public class DelegatedAuthenticationEntryPoint implements AuthenticationEntryPoi
     public void commence(HttpServletRequest request,
                          HttpServletResponse response,
                          AuthenticationException authException) {
-        resolver.resolveException(request, response, null, authException);
+        resolver.resolveException(request, response, defaultValue(Object.class), authException);
     }
 
 }

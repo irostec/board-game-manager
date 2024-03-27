@@ -1,14 +1,6 @@
 package com.irostec.boardgamemanager;
 
-import com.irostec.boardgamemanager.application.shared.bggapi.output.BoardGameFromBGG;
-import com.irostec.boardgamemanager.application.shared.bggapi.output.Image;
-import com.irostec.boardgamemanager.application.shared.bggapi.output.ImageType;
-import com.irostec.boardgamemanager.application.shared.bggapi.output.Link;
-import com.irostec.boardgamemanager.application.shared.bggapi.output.LinkType;
-import com.irostec.boardgamemanager.application.shared.bggapi.output.Name;
-import com.irostec.boardgamemanager.application.shared.bggapi.output.NameType;
-import com.irostec.boardgamemanager.application.shared.bggapi.output.Video;
-import com.irostec.boardgamemanager.common.exception.BGMException;
+import com.irostec.boardgamemanager.application.shared.bggapi.output.*;
 import com.irostec.boardgamemanager.common.type.NonNegativeDecimal;
 import com.irostec.boardgamemanager.common.type.NonNegativeInteger;
 import com.irostec.boardgamemanager.common.type.PositiveInteger;
@@ -24,7 +16,7 @@ public final class TestingUtils {
 
     private TestingUtils() {}
 
-    public static BoardGameFromBGG buildBoardGameFromBGG() throws BGMException {
+    public static BoardGameFromBGG buildBoardGameFromBGG() {
 
         final String id = "174430";
 
@@ -45,12 +37,16 @@ public final class TestingUtils {
 
         final int yearPublished = 2017;
 
-        final PositiveInteger minPlayers = new PositiveInteger(1);
-        final PositiveInteger maxPlayers = new PositiveInteger(4);
-        final PositiveInteger playingTime = new PositiveInteger(120);
-        final PositiveInteger minPlaytime = new PositiveInteger(60);
-        final PositiveInteger maxPlaytime = new PositiveInteger(120);
-        final NonNegativeInteger minAge = new NonNegativeInteger(14);
+        final PositiveInteger minimumPlayers = PositiveInteger.of("minimumPlayers", 1).get();
+        final PositiveInteger maximumPlayers = PositiveInteger.of("maximumPlayers", 4).get();
+        final Players players = Players.of(minimumPlayers, maximumPlayers).get();
+
+        final PositiveInteger minimumPlaytime = PositiveInteger.of("minimumPlaytime", 60).get();
+        final PositiveInteger maximumPlaytime = PositiveInteger.of("maximumPlaytime", 120).get();
+        final PositiveInteger averagePlaytime = PositiveInteger.of("averagePlaytime", 120).get();
+        final Playtime playtime = Playtime.of(minimumPlaytime, maximumPlaytime, averagePlaytime).get();
+
+        final NonNegativeInteger minimumAge = NonNegativeInteger.of("minimumAge", 14).get();
 
         final Set<Link> links = Set.of(
                 new Link(LinkType.CATEGORY, "1022", "Adventure"),
@@ -84,7 +80,7 @@ public final class TestingUtils {
                 )
         );
 
-        final NonNegativeDecimal averageRating = new NonNegativeDecimal(8.59883f);
+        final NonNegativeDecimal averageRating = NonNegativeDecimal.of("averageRating", 8.59883f).get();
 
         return new BoardGameFromBGG(
                 id,
@@ -92,12 +88,9 @@ public final class TestingUtils {
                 names,
                 description,
                 yearPublished,
-                minPlayers,
-                maxPlayers,
-                playingTime,
-                minPlaytime,
-                maxPlaytime,
-                minAge,
+                players,
+                playtime,
+                minimumAge,
                 links,
                 videos,
                 averageRating

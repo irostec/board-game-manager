@@ -1,11 +1,9 @@
 package com.irostec.boardgamemanager.application.shared.bggapi.output;
 
+import io.vavr.control.Validation;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import java.util.Optional;
 
 /**
  * LinkTypeTest
@@ -18,9 +16,9 @@ class LinkTypeTest {
 
         final String nameOfValidLinkType = "boardgamecategory";
 
-        final Optional<LinkType> result = LinkType.fromPrefixedName(nameOfValidLinkType);
+        final Validation<String, LinkType> result = LinkType.fromPrefixedName(nameOfValidLinkType);
 
-        assertFalse(result.isEmpty());
+        assertTrue(result.isValid());
         assertEquals(LinkType.CATEGORY, result.get());
 
     }
@@ -30,9 +28,9 @@ class LinkTypeTest {
 
         final String nameOfInvalidLinkType = "unknown";
 
-        final Optional<LinkType> result = LinkType.fromPrefixedName(nameOfInvalidLinkType);
+        final Validation<String, LinkType> result = LinkType.fromPrefixedName(nameOfInvalidLinkType);
 
-        assertTrue(result.isEmpty());
+        assertTrue(result.isInvalid());
 
     }
 

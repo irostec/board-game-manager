@@ -1,14 +1,13 @@
 package com.irostec.boardgamemanager.configuration.security.core.workflow;
 
 import com.google.common.collect.ImmutableSet;
-import com.irostec.boardgamemanager.configuration.security.token.ValidateToken;
-import com.irostec.boardgamemanager.configuration.security.token.output.ValidatedToken;
-import com.irostec.boardgamemanager.configuration.security.user.helper.BGMRoleMapper;
-import com.irostec.boardgamemanager.configuration.security.user.GetRolesAndPrivileges;
-import com.irostec.boardgamemanager.configuration.security.user.input.ValidatedUsername;
-import com.irostec.boardgamemanager.configuration.security.user.output.RolesAndPrivileges;
-import io.atlassian.fugue.Checked;
-import io.atlassian.fugue.Eithers;
+import com.irostec.boardgamemanager.configuration.security.authentication.application.GetRolesAndPrivilegesService;
+import com.irostec.boardgamemanager.configuration.security.authentication.application.ParseTokenService;
+import com.irostec.boardgamemanager.configuration.security.authentication.application.parsetoken.error.ExpiredToken;
+import com.irostec.boardgamemanager.configuration.security.authentication.application.parsetoken.error.InvalidToken;
+import com.irostec.boardgamemanager.configuration.security.authentication.application.parsetoken.output.TokenData;
+import com.irostec.boardgamemanager.configuration.security.authentication.helper.BGMRoleMapper;
+import com.irostec.boardgamemanager.configuration.security.authentication.application.getrolesandprivileges.output.RolesAndPrivileges;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,7 +19,11 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import static com.google.common.base.Defaults.defaultValue;
+
 import java.io.IOException;
+import java.util.Collections;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -33,8 +36,8 @@ final class JwtAuthenticationFilter extends BGMAuthenticationFilter {
     private static final String AUTHORIZATION_HEADER_PREFIX = "Bearer ";
     private final int AUTHORIZATION_HEADER_PREFIX_LENGTH = AUTHORIZATION_HEADER_PREFIX.length();
 
-    private final ValidateToken validateToken;
-    private final GetRolesAndPrivileges getRolesAndPrivileges;
+    private final ParseTokenService parseTokenService;
+    private final GetRolesAndPrivilegesService getRolesAndPrivilegesService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -44,32 +47,37 @@ final class JwtAuthenticationFilter extends BGMAuthenticationFilter {
 
         final String authorizationHeader = request.getHeader("Authorization");
 
-        if (authorizationHeader != null
+        if (Objects.nonNull(authorizationHeader)
                 && authorizationHeader.length() > AUTHORIZATION_HEADER_PREFIX_LENGTH
                 && authorizationHeader.startsWith(AUTHORIZATION_HEADER_PREFIX)) {
 
             final String jwtToken = authorizationHeader.substring(AUTHORIZATION_HEADER_PREFIX_LENGTH);
 
-            final ValidatedUsername validatedUsername = Eithers.getOrThrow(
-                    validateToken.execute(jwtToken)
-                        .map(ValidatedToken::username)
-                        .leftMap(exception -> new BadCredentialsException("Invalid token", exception))
-            );
+            final String username = parseTokenService.execute(jwtToken)
+                        .map(TokenData::username)
+                        .getOrElseThrow(
+                                error ->
+                                        switch (error) {
+                                            case InvalidToken invalidToken ->
+                                                    new BadCredentialsException("Invalid token", invalidToken.cause());
+                                            case ExpiredToken expiredToken ->
+                                                new BadCredentialsException("Expired token");
+                                        }
+                        );
 
-            final RolesAndPrivileges rolesAndPrivileges =
-                    Checked.of(() -> this.getRolesAndPrivileges.execute(validatedUsername))
-                            .fold(
-                                    exception -> { throw new BadCredentialsException("Error retrieving user authorities", exception); },
-                                    optionalRolesAndPrivileges -> optionalRolesAndPrivileges.orElseThrow(() -> new BadCredentialsException("User authorities not found"))
-                            );
-
-            final Set<GrantedAuthority> authorities = rolesAndPrivileges.roles()
-                                .stream()
-                                .map(BGMRoleMapper.INSTANCE::toGrantedAuthority)
-                                .collect(ImmutableSet.toImmutableSet());
+            final Set<GrantedAuthority> authorities =
+                    this.getRolesAndPrivilegesService.execute(username)
+                            .getOrElseThrow(
+                                    error -> new BadCredentialsException("Couldn't get the roles and privileges from the database")
+                            )
+                            .map(RolesAndPrivileges::roles)
+                            .orElse(Collections.emptySet())
+                            .stream()
+                            .map(BGMRoleMapper.INSTANCE::toGrantedAuthority)
+                            .collect(ImmutableSet.toImmutableSet());
 
             final Authentication authentication =
-                    new UsernamePasswordAuthenticationToken(validatedUsername.value(), null, authorities);
+                    new UsernamePasswordAuthenticationToken(username, defaultValue(Object.class), authorities);
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
 

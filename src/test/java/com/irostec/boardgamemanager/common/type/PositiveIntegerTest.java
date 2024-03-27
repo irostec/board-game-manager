@@ -1,10 +1,9 @@
 package com.irostec.boardgamemanager.common.type;
 
-import com.irostec.boardgamemanager.common.exception.BGMException;
+import io.vavr.control.Validation;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * PositiveIntegerTest
@@ -12,34 +11,39 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  */
 class PositiveIntegerTest {
 
+    private static final String PROPERTY_NAME = "positiveIntegerProperty";
+
     @Test
-    void givenAPositiveInteger_whenItIsInitializedWithANegativeInput_thenAnExceptionShouldBeThrown() {
+    void givenAPositiveInteger_whenItIsInitializedWithANegativeInput_thenTheValidationShouldFail() {
 
         final int input = -1;
 
-        assertThrows(BGMException.class, () -> new PositiveInteger(input));
+        final Validation<String, PositiveInteger> result = PositiveInteger.of(PROPERTY_NAME, input);
+
+        assertTrue(result.isInvalid());
 
     }
 
     @Test
-    void givenAPositiveInteger_whenItIsInitializedWithZero_thenAnExceptionShouldBeThrown()
-            throws BGMException{
+    void givenAPositiveInteger_whenItIsInitializedWithZero_thenTheValidationShouldFail() {
 
         final int input = 0;
 
-        assertThrows(BGMException.class, () -> new PositiveInteger(input));
+        final Validation<String, PositiveInteger> result = PositiveInteger.of(PROPERTY_NAME, input);
+
+        assertTrue(result.isInvalid());
 
     }
 
     @Test
-    void givenAPositiveInteger_whenItIsInitializedWithAPositiveInput_thenTheInitializationShouldSucceed()
-            throws BGMException{
+    void givenAPositiveInteger_whenItIsInitializedWithAPositiveInput_thenTheInitializationShouldSucceed() {
 
         final int input = 1;
 
-        final PositiveInteger result = new PositiveInteger(input);
+        final Validation<String, PositiveInteger> result = PositiveInteger.of(PROPERTY_NAME, input);
 
-        assertEquals(input, result.value());
+        assertTrue(result.isValid());
+        assertEquals(input, result.get().getValue());
 
     }
 

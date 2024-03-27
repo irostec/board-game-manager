@@ -1,7 +1,8 @@
 package com.irostec.boardgamemanager.application.shared.bggapi.output;
 
+import io.vavr.control.Validation;
+
 import java.util.Arrays;
-import java.util.Optional;
 
 /**
  * NameType
@@ -10,11 +11,17 @@ import java.util.Optional;
 public enum NameType {
     PRIMARY, ALTERNATE;
 
-    public static Optional<NameType> fromName(String name)  {
+    public static Validation<String, NameType> fromName(String name)  {
 
         return Arrays.stream(NameType.values())
                 .filter(nameType -> nameType.name().compareToIgnoreCase(name) == 0)
-                .findFirst();
+                .findFirst()
+                .map(Validation::<String, NameType>valid)
+                .orElseGet(() ->
+                        Validation.invalid(
+                                String.format("Unknown NameType description: '%s'", name)
+                        )
+                );
 
     }
 

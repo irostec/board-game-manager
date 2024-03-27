@@ -154,13 +154,13 @@
 			<version>2.25.5</version>
 		</dependency>
 
-		<!-- Atlassian Fugue -->
-		<!-- A collection of utilities supporting Functional Programming -->
-		<!-- https://mvnrepository.com/artifact/io.atlassian.fugue/fugue -->
+		<!-- Vavr -->
+		<!-- An object-functional library for Java 8+ -->
+		<!-- https://mvnrepository.com/artifact/io.vavr/vavr -->
 		<dependency>
-			<groupId>io.atlassian.fugue</groupId>
-			<artifactId>fugue</artifactId>
-			<version>4.5.1</version>
+			<groupId>io.vavr</groupId>
+			<artifactId>vavr</artifactId>
+			<version>1.0.0-alpha-3</version>
 		</dependency>
 
 		<!-- Apache Commons Lang -->
@@ -275,18 +275,15 @@
 						<!-- AWS configuration classes. These are Spring-specific and, if they don't work properly, the application just doesn't start, so no need to test them. -->
 						<exclude>com/irostec/boardgamemanager/configuration/aws/**/*</exclude>
 
-						<!-- Framework-specific code that can be used by other configuration and boundary classes. -->
-						<exclude>com/irostec/boardgamemanager/configuration/common/**/*</exclude>
-
 						<!-- Components required by Spring Security (annotations, filters, etc.).
 						In case testing is needed, it should be performed on the secured methods, not on the plumbing code. -->
 						<exclude>com/irostec/boardgamemanager/configuration/security/core/**/*</exclude>
 
-						<!-- Configuration of the JWT-related beans -->
-						<exclude>com/irostec/boardgamemanager/configuration/security/token/boundary/**/*</exclude>
+						<!-- Configuration of the authentication-related beans -->
+						<exclude>com/irostec/boardgamemanager/configuration/security/authentication/boundary/**/*</exclude>
 
-						<!-- Configuration of the controllers and database access necessary for user management -->
-						<exclude>com/irostec/boardgamemanager/configuration/security/user/boundary/**/*</exclude>
+						<!-- Records, sealed classes and interfaces used to represent the output of each use case. Nothing to test here -->
+						<exclude>com/irostec/boardgamemanager/**/output/*</exclude>
 
 					</excludes>
 				</configuration>

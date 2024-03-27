@@ -1,7 +1,8 @@
 package com.irostec.boardgamemanager.application.shared.bggapi.output;
 
+import io.vavr.control.Validation;
+
 import java.util.Arrays;
-import java.util.Optional;
 
 /**
  * LinkType
@@ -19,11 +20,15 @@ public enum LinkType {
     ARTIST,
     PUBLISHER;
 
-    public static Optional<LinkType> fromPrefixedName(String prefixedName) {
+    public static Validation<String, LinkType> fromPrefixedName(String prefixedName) {
 
         return Arrays.stream(LinkType.values())
                 .filter(linkType -> prefixedName.compareToIgnoreCase("boardgame" + linkType.name()) == 0)
-                .findFirst();
+                .findFirst()
+                .map(Validation::<String, LinkType>valid)
+                .orElseGet(() ->
+                        Validation.invalid(String.format("Unknown LinkType description: '%s'", prefixedName))
+                );
 
     }
 

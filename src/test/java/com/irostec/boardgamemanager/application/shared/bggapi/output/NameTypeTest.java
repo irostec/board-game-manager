@@ -1,11 +1,9 @@
 package com.irostec.boardgamemanager.application.shared.bggapi.output;
 
+import io.vavr.control.Validation;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import java.util.Optional;
 
 /**
  * NameTypeTest
@@ -18,9 +16,9 @@ class NameTypeTest {
 
         final String nameOfValidNameType = "alternate";
 
-        final Optional<NameType> result = NameType.fromName(nameOfValidNameType);
+        final Validation<String, NameType> result = NameType.fromName(nameOfValidNameType);
 
-        assertFalse(result.isEmpty());
+        assertTrue(result.isValid());
         assertEquals(NameType.ALTERNATE, result.get());
 
     }
@@ -30,9 +28,9 @@ class NameTypeTest {
 
         final String nameOfInvalidNameType = "unknown";
 
-        final Optional<NameType> result = NameType.fromName(nameOfInvalidNameType);
+        final Validation<String, NameType> result = NameType.fromName(nameOfInvalidNameType);
 
-        assertTrue(result.isEmpty());
+        assertTrue(result.isInvalid());
 
     }
 
