@@ -22,8 +22,10 @@ class BGGApiConfiguration {
     }
 
     @Bean
-    public Endpoints bggEndpoints(@Value("${boardgamegeek.api.url}") String bggApi2Url,
-                                  JaxbConverterFactory jaxbConverterFactory) throws JAXBException {
+    public Endpoints bggEndpoints(
+            @Value("${boardgamegeek.api.url}") String bggApi2Url,
+            JaxbConverterFactory jaxbConverterFactory
+    ) {
 
         final OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
 

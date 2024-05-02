@@ -8,12 +8,73 @@ Resources:
       Description: "The URL for the boardgamegeek.com API"
       Type: "String"
       Value: "https://boardgamegeek.com/xmlapi2/"
+  DynamoDB_User_Table:
+    Type: "AWS::SSM::Parameter"
+    Properties:
+      Name: "/config/board-game-manager/aws.dynamodb.user.table"
+      Description: "The table user to store user information in DynamoDB"
+      Type: "String"
+      Value: "boardgamemanager.user"
+  JWT_Signing_Key:
+    Type: "AWS::SSM::Parameter"
+    Properties:
+      Name: "/config/board-game-manager/jwt.signing.key"
+      Description: "The key used to sign the JWT tokens during user authentication"
+      Type: "String"
+      Value: "ymLTU8rq83j4fmJZj60wh4OrMNuntIj4fmJ"
+  Spring_Datasource_URL:
+    Type: "AWS::SSM::Parameter"
+    Properties:
+      Name: "/config/board-game-manager/spring.datasource.url"
+      Description: "The location of the SQL database used to store board game data"
+      Type: "String"
+      Value: "jdbc:postgresql://localhost:5432/bgmdb?createDatabaseIfNotExist=true"
+  Spring_Datasource_Username:
+    Type: "AWS::SSM::Parameter"
+    Properties:
+      Name: "/config/board-game-manager/spring.datasource.username"
+      Description: "The username included in the connection to the SQL database used to store board game data"
+      Type: "String"
+      Value: "admin"
   Spring_Datasource_Password:
     Type: "AWS::SSM::Parameter"
     Properties:
       Name: "/config/board-game-manager/spring.datasource.password"
-      Description: "The password used to connect to the PostgreSQL database"
-      # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ssm-parameter.html
-      # Although SecureString is included in the list of valid values, AWS CloudFormation does not currently support creating a SecureString parameter type.
+      Description: "The password used to connect to the SQL database used to store board game data"
       Type: "String"
-      Value: "mytopsecretpassword"
+      Value: "verysecurepassword"
+  Splunk_HTTP_URL:
+    Type: "AWS::SSM::Parameter"
+    Properties:
+      Name: "/config/board-game-manager/splunk.http.url"
+      Description: "Splunk configuration parameter: url"
+      Type: "String"
+      Value: "https://localhost:8088"
+  Splunk_HTTP_Token:
+    Type: "AWS::SSM::Parameter"
+    Properties:
+      Name: "/config/board-game-manager/splunk.http.token"
+      Description: "Splunk configuration parameter: token"
+      Type: "String"
+      Value: "7f99549c-adfb-482b-af62-c3b3dc103edd"
+  Splunk_HTTP_Host:
+    Type: "AWS::SSM::Parameter"
+    Properties:
+      Name: "/config/board-game-manager/splunk.http.host"
+      Description: "Splunk configuration parameter: host"
+      Type: "String"
+      Value: "localhost"
+  Splunk_HTTP_Index:
+    Type: "AWS::SSM::Parameter"
+    Properties:
+      Name: "/config/board-game-manager/splunk.http.index"
+      Description: "Splunk configuration parameter: index"
+      Type: "String"
+      Value: "main"
+  Splunk_HTTP_Source:
+    Type: "AWS::SSM::Parameter"
+    Properties:
+      Name: "/config/board-game-manager/splunk.http.source"
+      Description: "Splunk configuration parameter: source"
+      Type: "String"
+      Value: "http:splunk_hec_token"

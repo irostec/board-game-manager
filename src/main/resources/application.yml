@@ -1,6 +1,21 @@
 spring:
   application:
     name: board-game-manager
+  cloud:
+    aws:
+      # https://docs.awspring.io/spring-cloud-aws/docs/3.0.3/reference/html/index.html#defaultcredentialsprovider
+      credentials:
+        access-key: ${AWS_ACCESS_KEY_ID}
+        secret-key: ${AWS_SECRET_KEY}
+      # https://docs.awspring.io/spring-cloud-aws/docs/3.0.3/reference/html/index.html#spring-cloud-aws-parameter-store
+      parameterstore:
+        endpoint: ${AWS_ENDPOINT}
+      region:
+        static: ${AWS_REGION}
+  config:
+    # Make sure to include the / at the end of the path, even though the documentation doesn't say to do so
+    # https://github.com/awspring/spring-cloud-aws/issues/923#issuecomment-1788623590
+    import: aws-parameterstore:/config/board-game-manager/
 
 management:
   security:
@@ -10,27 +25,6 @@ management:
       exposure:
         include: health, loggers # Enable actuator endpoints
 
-jwt:
-  signing:
-    key: ${JWT_SIGNING_KEY}
-
 aws:
   localStack:
       enabled: ${LOCALSTACK_ENABLED}
-      endpoint:
-        url: ${AWS_ENDPOINT_URL}
-  paramstore:
-    prefix: /config
-    defaultContext: board-game-manager
-    profileSeparator: _
-  dynamodb:
-    user:
-      table: ${AWS_DYNAMODB_USER_TABLE}
-
-splunk:
-  http:
-    url: ${SPLUNK_HTTP_URL}
-    token: ${SPLUNK_HTTP_TOKEN}
-    host: ${SPLUNK_HTTP_HOST}
-    index: ${SPLUNK_HTTP_INDEX}
-    source: ${SPLUNK_HTTP_SOURCE}

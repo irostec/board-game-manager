@@ -10,8 +10,6 @@ import org.springframework.context.annotation.Configuration;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.client.builder.AwsClientBuilder;
-import com.amazonaws.services.simplesystemsmanagement.AWSSimpleSystemsManagement;
-import com.amazonaws.services.simplesystemsmanagement.AWSSimpleSystemsManagementClientBuilder;
 import com.amazonaws.regions.DefaultAwsRegionProviderChain;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
@@ -30,39 +28,24 @@ import java.net.URISyntaxException;
 @ConditionalOnProperty(value = ApplicationProperties.LOCALSTACK_ENABLED_FLAG, havingValue = "true")
 class LocalStackClientConfig {
 
-    @Value("${aws.localStack.endpoint.url}")
-    private String awsEndpointUrl;
+    @Value("${AWS_ENDPOINT}")
+    private String awsEndpoint;
 
     @Bean
     public AWSCredentialsProvider getAWScredentialsProvider() {
         return DefaultAWSCredentialsProviderChain.getInstance();
     }
 
-
-    /* AWS Systems Manager Parameter Store configuration - Start */
-
     @Bean
     public AwsClientBuilder.EndpointConfiguration getEndpointConfiguration() {
 
-        return new AwsClientBuilder.EndpointConfiguration(awsEndpointUrl,
-                new DefaultAwsRegionProviderChain().getRegion());
+        return new AwsClientBuilder.EndpointConfiguration(
+                awsEndpoint,
+                new DefaultAwsRegionProviderChain().getRegion()
+        );
 
     }
 
-    @Bean
-    public AWSSimpleSystemsManagement getSimpleSystemsManagementClient(
-        AWSCredentialsProvider credentialsProvider,
-        AwsClientBuilder.EndpointConfiguration endpointConfiguration
-    ) {
-
-        return AWSSimpleSystemsManagementClientBuilder.standard()
-                .withCredentials(credentialsProvider)
-                .withEndpointConfiguration(endpointConfiguration)
-                .build();
-
-    }
-
-    /* AWS Systems Manager Parameter Store configuration - End */
 
     /* Amazon DynamoDB configuration - Start */
 
@@ -75,7 +58,7 @@ class LocalStackClientConfig {
     public DynamoDbClient getDynamoDbClient(AwsCredentialsProvider credentialsProvider) throws URISyntaxException {
         return DynamoDbClient.builder()
                 .credentialsProvider(credentialsProvider)
-                .endpointOverride(new URI(awsEndpointUrl))
+                .endpointOverride(new URI(awsEndpoint))
                 .build();
     }
 
