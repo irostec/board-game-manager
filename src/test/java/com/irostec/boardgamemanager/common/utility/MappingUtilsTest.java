@@ -1,11 +1,11 @@
 package com.irostec.boardgamemanager.common.utility;
 
-import com.amazonaws.services.simplesystemsmanagement.model.GetParameterRequest;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.ImmutableTriple;
 import org.junit.jupiter.api.Test;
 
-import java.util.Collection;
+import com.irostec.boardgamemanager.application.core.shared.bggapi.output.Name;
+import com.irostec.boardgamemanager.application.core.shared.bggapi.output.NameType;
 import java.util.List;
 import java.util.Map;
 
@@ -20,24 +20,22 @@ class MappingUtilsTest {
     @Test
     void toMap() {
 
-        final String name = "my_parameter";
-        final boolean withDecryption = true;
+        final NameType nameType = NameType.PRIMARY;
+        final String value = "Gloomhaven";
 
-        final GetParameterRequest getParameterRequest = new GetParameterRequest()
-                .withName(name)
-                .withWithDecryption(withDecryption);
+        final Name name = new Name(nameType, value);
 
-        final String keyForName = "name";
-        final String keyForWithDecryption = "withDecryption";
+        final String keyForNameType = "nameType";
+        final String keyForValue = "name";
 
         final Map<String, String> result = MappingUtils.toMap(
-                getParameterRequest,
-                ImmutablePair.of(request -> keyForName, GetParameterRequest::getName),
-                ImmutablePair.of(request -> keyForWithDecryption, request -> String.valueOf(request.getWithDecryption()))
+                name,
+                ImmutablePair.of(n -> keyForNameType, n -> n.type().name()),
+                ImmutablePair.of(n -> keyForValue, Name::value)
         );
 
-        assertEquals(name, result.get(keyForName));
-        assertEquals(String.valueOf(withDecryption), result.get(keyForWithDecryption));
+        assertEquals(nameType.name(), result.get(keyForNameType));
+        assertEquals(value, result.get(keyForValue));
 
     }
 

@@ -1,6 +1,6 @@
 package com.irostec.boardgamemanager.configuration.security.authentication.helper;
 
-import com.irostec.boardgamemanager.configuration.security.authentication.application.getrolesandprivileges.output.BGMRole;
+import com.irostec.boardgamemanager.configuration.security.authentication.core.getrolesandprivileges.output.BGMRole;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.security.core.GrantedAuthority;

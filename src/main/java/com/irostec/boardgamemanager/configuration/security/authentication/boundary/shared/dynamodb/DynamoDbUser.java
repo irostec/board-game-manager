@@ -2,8 +2,8 @@ package com.irostec.boardgamemanager.configuration.security.authentication.bound
 
 import java.util.Set;
 
-import com.irostec.boardgamemanager.configuration.security.authentication.application.getrolesandprivileges.output.BGMRole;
-import com.irostec.boardgamemanager.configuration.security.authentication.application.getuser.output.BGMUser;
+import com.irostec.boardgamemanager.configuration.security.authentication.core.getrolesandprivileges.output.BGMRole;
+import com.irostec.boardgamemanager.configuration.security.authentication.core.getuser.output.BGMUser;
 import lombok.Data;
 
 /**

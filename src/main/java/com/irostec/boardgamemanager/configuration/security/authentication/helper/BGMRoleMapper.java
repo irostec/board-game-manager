@@ -1,6 +1,6 @@
 package com.irostec.boardgamemanager.configuration.security.authentication.helper;
 
-import com.irostec.boardgamemanager.configuration.security.authentication.application.getrolesandprivileges.output.BGMRole;
+import com.irostec.boardgamemanager.configuration.security.authentication.core.getrolesandprivileges.output.BGMRole;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
 import org.springframework.security.core.GrantedAuthority;

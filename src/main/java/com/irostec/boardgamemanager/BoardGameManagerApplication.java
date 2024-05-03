@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @EnableAutoConfiguration
-@ComponentScan(basePackages = {"com.irostec.boardgamemanager.configuration", "com.irostec.boardgamemanager.boundary"})
+@ComponentScan(basePackages = {"com.irostec.boardgamemanager.configuration", "com.irostec.boardgamemanager.application.boundary"})
 public class BoardGameManagerApplication {
 
 	public static void main(String[] args) {

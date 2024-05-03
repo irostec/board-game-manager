@@ -1,8 +1,8 @@
 package com.irostec.boardgamemanager.configuration.security.authentication.boundary.getrolesandprivileges;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
-import com.irostec.boardgamemanager.configuration.security.authentication.application.getrolesandprivileges.output.BGMRole;
-import com.irostec.boardgamemanager.configuration.security.authentication.application.getrolesandprivileges.output.RolesAndPrivileges;
+import com.irostec.boardgamemanager.configuration.security.authentication.core.getrolesandprivileges.output.BGMRole;
+import com.irostec.boardgamemanager.configuration.security.authentication.core.getrolesandprivileges.output.RolesAndPrivileges;
 
 import java.util.Set;
 

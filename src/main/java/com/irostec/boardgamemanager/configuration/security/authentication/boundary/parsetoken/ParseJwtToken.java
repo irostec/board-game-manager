@@ -1,9 +1,9 @@
 package com.irostec.boardgamemanager.configuration.security.authentication.boundary.parsetoken;
 
-import com.irostec.boardgamemanager.configuration.security.authentication.application.parsetoken.error.ExpiredToken;
-import com.irostec.boardgamemanager.configuration.security.authentication.application.parsetoken.error.ValidateTokenError;
-import com.irostec.boardgamemanager.configuration.security.authentication.application.parsetoken.output.TokenData;
-import com.irostec.boardgamemanager.configuration.security.authentication.application.ParseTokenService;
+import com.irostec.boardgamemanager.configuration.security.authentication.core.parsetoken.error.ExpiredToken;
+import com.irostec.boardgamemanager.configuration.security.authentication.core.parsetoken.error.ValidateTokenError;
+import com.irostec.boardgamemanager.configuration.security.authentication.core.parsetoken.output.TokenData;
+import com.irostec.boardgamemanager.configuration.security.authentication.core.ParseTokenService;
 import io.vavr.control.Either;
 import io.vavr.control.Try;
 import io.jsonwebtoken.Claims;
@@ -14,7 +14,7 @@ import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.Objects;
 
-import com.irostec.boardgamemanager.configuration.security.authentication.application.parsetoken.error.InvalidToken;
+import com.irostec.boardgamemanager.configuration.security.authentication.core.parsetoken.error.InvalidToken;
 
 /**
  * ParseJwtToken

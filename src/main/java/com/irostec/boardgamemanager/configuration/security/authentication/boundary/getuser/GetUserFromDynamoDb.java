@@ -1,9 +1,9 @@
 package com.irostec.boardgamemanager.configuration.security.authentication.boundary.getuser;
 
 import com.irostec.boardgamemanager.common.utility.LoggingUtils;
-import com.irostec.boardgamemanager.configuration.security.authentication.application.GetUserService;
-import com.irostec.boardgamemanager.configuration.security.authentication.application.getuser.error.GetUserError;
-import com.irostec.boardgamemanager.configuration.security.authentication.application.getuser.output.BGMUser;
+import com.irostec.boardgamemanager.configuration.security.authentication.core.GetUserService;
+import com.irostec.boardgamemanager.configuration.security.authentication.core.getuser.error.GetUserError;
+import com.irostec.boardgamemanager.configuration.security.authentication.core.getuser.output.BGMUser;
 import com.irostec.boardgamemanager.configuration.security.authentication.boundary.shared.dynamodb.DynamoDbUser;
 import com.irostec.boardgamemanager.configuration.security.authentication.boundary.shared.dynamodb.DynamoDbUserTable;
 import io.vavr.control.Either;

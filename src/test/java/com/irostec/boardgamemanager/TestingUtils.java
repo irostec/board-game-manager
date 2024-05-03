@@ -1,6 +1,6 @@
 package com.irostec.boardgamemanager;
 
-import com.irostec.boardgamemanager.application.shared.bggapi.output.*;
+import com.irostec.boardgamemanager.application.core.shared.bggapi.output.*;
 import com.irostec.boardgamemanager.common.type.NonNegativeDecimal;
 import com.irostec.boardgamemanager.common.type.NonNegativeInteger;
 import com.irostec.boardgamemanager.common.type.PositiveInteger;

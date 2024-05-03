@@ -1,7 +1,7 @@
 package com.irostec.boardgamemanager.configuration.security.authentication.boundary.createuser;
 
-import com.irostec.boardgamemanager.configuration.security.authentication.application.CreateUserService;
-import com.irostec.boardgamemanager.configuration.security.authentication.application.createuser.dependency.SaveUser;
+import com.irostec.boardgamemanager.configuration.security.authentication.core.CreateUserService;
+import com.irostec.boardgamemanager.configuration.security.authentication.core.createuser.dependency.SaveUser;
 import com.irostec.boardgamemanager.configuration.security.authentication.boundary.createuser.dependency.SaveUserInDynamoDb;
 import com.irostec.boardgamemanager.configuration.security.authentication.boundary.shared.dynamodb.DynamoDbUserTable;
 import org.springframework.context.annotation.Bean;

@@ -3,17 +3,17 @@ package com.irostec.boardgamemanager.configuration.security.authentication.bound
 import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.spec.GetItemSpec;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.irostec.boardgamemanager.configuration.security.authentication.application.GetRolesAndPrivilegesService;
-import com.irostec.boardgamemanager.configuration.security.authentication.application.getrolesandprivileges.error.GetRolesAndPrivilegesError;
+import com.irostec.boardgamemanager.configuration.security.authentication.core.GetRolesAndPrivilegesService;
+import com.irostec.boardgamemanager.configuration.security.authentication.core.getrolesandprivileges.error.GetRolesAndPrivilegesError;
 import com.irostec.boardgamemanager.configuration.security.authentication.boundary.shared.dynamodb.DynamoDbUserTable;
-import com.irostec.boardgamemanager.configuration.security.authentication.application.getrolesandprivileges.output.RolesAndPrivileges;
+import com.irostec.boardgamemanager.configuration.security.authentication.core.getrolesandprivileges.output.RolesAndPrivileges;
 import io.vavr.control.Either;
 import io.vavr.control.Try;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Component;
-import com.irostec.boardgamemanager.configuration.security.authentication.application.getrolesandprivileges.error.DatabaseFailure;
-import com.irostec.boardgamemanager.configuration.security.authentication.application.getrolesandprivileges.error.InvalidFormat;
+import com.irostec.boardgamemanager.configuration.security.authentication.core.getrolesandprivileges.error.DatabaseFailure;
+import com.irostec.boardgamemanager.configuration.security.authentication.core.getrolesandprivileges.error.InvalidFormat;
 
 import java.util.Objects;
 import java.util.Optional;

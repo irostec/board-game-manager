@@ -1,8 +1,8 @@
 package com.irostec.boardgamemanager.configuration.security.authentication.boundary;
 
-import com.irostec.boardgamemanager.configuration.security.authentication.application.CreateTokenService;
-import com.irostec.boardgamemanager.configuration.security.authentication.application.ParseTokenService;
-import com.irostec.boardgamemanager.configuration.security.authentication.application.createtoken.dependency.TokenFactory;
+import com.irostec.boardgamemanager.configuration.security.authentication.core.CreateTokenService;
+import com.irostec.boardgamemanager.configuration.security.authentication.core.ParseTokenService;
+import com.irostec.boardgamemanager.configuration.security.authentication.core.createtoken.dependency.TokenFactory;
 import com.irostec.boardgamemanager.configuration.security.authentication.boundary.createtoken.dependency.JwtTokenFactory;
 import com.irostec.boardgamemanager.configuration.security.authentication.boundary.parsetoken.ParseJwtToken;
 import io.jsonwebtoken.security.Keys;

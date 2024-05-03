@@ -1,13 +1,13 @@
 package com.irostec.boardgamemanager.configuration.security.authentication.boundary.createuser.dependency;
 
 import com.irostec.boardgamemanager.common.utility.LoggingUtils;
-import com.irostec.boardgamemanager.configuration.security.authentication.application.createuser.dependency.SaveUser;
+import com.irostec.boardgamemanager.configuration.security.authentication.core.createuser.dependency.SaveUser;
 import com.irostec.boardgamemanager.configuration.security.authentication.boundary.shared.dynamodb.DynamoDbUser;
 import com.irostec.boardgamemanager.configuration.security.authentication.boundary.shared.dynamodb.DynamoDbUserTable;
 import com.irostec.boardgamemanager.configuration.security.authentication.boundary.shared.dynamodb.Email;
-import com.irostec.boardgamemanager.configuration.security.authentication.application.createuser.error.PersistenceFailure;
-import com.irostec.boardgamemanager.configuration.security.authentication.application.createuser.dependency.ValidatedUserCreationData;
-import com.irostec.boardgamemanager.configuration.security.authentication.application.getrolesandprivileges.output.BGMRole;
+import com.irostec.boardgamemanager.configuration.security.authentication.core.createuser.error.PersistenceFailure;
+import com.irostec.boardgamemanager.configuration.security.authentication.core.createuser.dependency.ValidatedUserCreationData;
+import com.irostec.boardgamemanager.configuration.security.authentication.core.getrolesandprivileges.output.BGMRole;
 import io.vavr.control.Either;
 import io.vavr.control.Try;
 import lombok.AllArgsConstructor;

@@ -6,7 +6,7 @@
     <jaxb:bindings schemaLocation="boardgames.xsd">
 
         <jaxb:schemaBindings>
-            <jaxb:package name="com.irostec.boardgamemanager.boundary.shared.bggapi.jaxb.generated" />
+            <jaxb:package name="com.irostec.boardgamemanager.application.boundary.shared.bggapi.jaxb.generated" />
         </jaxb:schemaBindings>
 
         <jaxb:bindings node = "//xs:element[@name='name']//xs:attribute[@name='value']">

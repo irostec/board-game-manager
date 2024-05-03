@@ -1,7 +1,7 @@
 package com.irostec.boardgamemanager.configuration.security.authentication.boundary.createtoken.dependency;
 
-import com.irostec.boardgamemanager.configuration.security.authentication.application.createtoken.dependency.TokenFactory;
-import com.irostec.boardgamemanager.configuration.security.authentication.application.createtoken.error.Unauthorized;
+import com.irostec.boardgamemanager.configuration.security.authentication.core.createtoken.dependency.TokenFactory;
+import com.irostec.boardgamemanager.configuration.security.authentication.core.createtoken.error.Unauthorized;
 import io.jsonwebtoken.Jwts;
 import io.vavr.control.Either;
 import io.vavr.control.Try;

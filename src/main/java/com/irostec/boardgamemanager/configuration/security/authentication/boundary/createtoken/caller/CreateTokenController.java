@@ -1,8 +1,8 @@
 package com.irostec.boardgamemanager.configuration.security.authentication.boundary.createtoken.caller;
 
-import com.irostec.boardgamemanager.configuration.security.authentication.application.CreateTokenService;
-import com.irostec.boardgamemanager.configuration.security.authentication.application.createtoken.error.CreateTokenError;
-import com.irostec.boardgamemanager.configuration.security.authentication.application.createtoken.error.Unauthorized;
+import com.irostec.boardgamemanager.configuration.security.authentication.core.CreateTokenService;
+import com.irostec.boardgamemanager.configuration.security.authentication.core.createtoken.error.CreateTokenError;
+import com.irostec.boardgamemanager.configuration.security.authentication.core.createtoken.error.Unauthorized;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;

@@ -1,11 +1,11 @@
 package com.irostec.boardgamemanager.configuration.security.authentication.boundary.createuser.caller;
 
 import com.irostec.boardgamemanager.common.utility.LoggingUtils;
-import com.irostec.boardgamemanager.configuration.security.authentication.application.CreateUserService;
-import com.irostec.boardgamemanager.configuration.security.authentication.application.createuser.error.CreateUserError;
-import com.irostec.boardgamemanager.configuration.security.authentication.application.createuser.error.InvalidInput;
-import com.irostec.boardgamemanager.configuration.security.authentication.application.createuser.error.PersistenceFailure;
-import com.irostec.boardgamemanager.configuration.security.authentication.application.createuser.input.UserData;
+import com.irostec.boardgamemanager.configuration.security.authentication.core.CreateUserService;
+import com.irostec.boardgamemanager.configuration.security.authentication.core.createuser.error.CreateUserError;
+import com.irostec.boardgamemanager.configuration.security.authentication.core.createuser.error.InvalidInput;
+import com.irostec.boardgamemanager.configuration.security.authentication.core.createuser.error.PersistenceFailure;
+import com.irostec.boardgamemanager.configuration.security.authentication.core.createuser.input.UserData;
 import lombok.AllArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

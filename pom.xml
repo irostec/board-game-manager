@@ -317,7 +317,7 @@
 						<exclude>com/irostec/boardgamemanager/BoardGameManagerApplication.class</exclude>
 
 						<!-- These classes depend on direct interactions with external dependencies, and as such their behavior can only be evaluated during integration or systems testing. -->
-						<exclude>com/irostec/boardgamemanager/boundary/**/*</exclude>
+						<exclude>com/irostec/boardgamemanager/application/boundary/**/*</exclude>
 
 						<!-- Utility methods for Logging. This is the realm of integrations and systems testing. -->
 						<exclude>com/irostec/boardgamemanager/common/utility/LoggingUtils.class</exclude>
@@ -327,13 +327,16 @@
 
 						<!-- Components required by Spring Security (annotations, filters, etc.).
 						In case testing is needed, it should be performed on the secured methods, not on the plumbing code. -->
-						<exclude>com/irostec/boardgamemanager/configuration/security/core/**/*</exclude>
+						<exclude>com/irostec/boardgamemanager/configuration/security/errorhandling/*</exclude>
+						<exclude>com/irostec/boardgamemanager/configuration/security/exception/*</exclude>
+						<exclude>com/irostec/boardgamemanager/configuration/security/workflow/*</exclude>
 
 						<!-- Configuration of the authentication-related beans -->
 						<exclude>com/irostec/boardgamemanager/configuration/security/authentication/boundary/**/*</exclude>
 
 						<!-- Records, sealed classes and interfaces used to represent the output of each use case. Nothing to test here -->
 						<exclude>com/irostec/boardgamemanager/**/output/*</exclude>
+						<exclude>com/irostec/boardgamemanager/**/error/*</exclude>
 
 					</excludes>
 				</configuration>
