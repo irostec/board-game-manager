@@ -5,11 +5,11 @@ import com.google.common.collect.Iterables;
 import com.irostec.boardgamemanager.application.core.shared.bggapi.output.*;
 import com.irostec.boardgamemanager.application.boundary.shared.bggapi.jaxb.generated.Items;
 import com.irostec.boardgamemanager.common.error.ErrorUtils;
+import com.irostec.boardgamemanager.common.type.NonNegativeShort;
 import com.irostec.boardgamemanager.common.type.NonNegativeDecimal;
 
 import com.google.common.collect.ImmutableList;
-import com.irostec.boardgamemanager.common.type.NonNegativeInteger;
-import com.irostec.boardgamemanager.common.type.PositiveInteger;
+import com.irostec.boardgamemanager.common.type.PositiveShort;
 import io.vavr.control.Validation;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -49,19 +49,19 @@ final class ItemsMapper {
 
         final String externalId = item.getId();
         final String description = item.getDescription();
-        final int yearPublished = item.getYearpublished().getVal();
+        final short yearPublished = item.getYearpublished().getVal();
 
-        final Validation<String, PositiveInteger> minimumPlayersValidation = PositiveInteger.of("minimumPlayers", item.getMinplayers().getVal());
-        final Validation<String, PositiveInteger> maximumPlayersValidation = PositiveInteger.of("maximumPlayers", item.getMaxplayers().getVal());
+        final Validation<String, PositiveShort> minimumPlayersValidation = PositiveShort.of("minimumPlayers", item.getMinplayers().getVal());
+        final Validation<String, PositiveShort> maximumPlayersValidation = PositiveShort.of("maximumPlayers", item.getMaxplayers().getVal());
         final Validation<ErrorSummary, Players> playersValidation =
                 Validation.combine(minimumPlayersValidation, maximumPlayersValidation)
                         .ap(Players::of)
                         .flatMap(validation -> validation.mapError(io.vavr.collection.List::of))
                         .mapError(ErrorSummary.CURRIED_MULTI_MESSAGE_BUILDER.apply("players"));
 
-        final Validation<String, PositiveInteger> minimumPlaytimeValidation = PositiveInteger.of("minimumPlaytime", item.getMinplaytime().getVal());
-        final Validation<String, PositiveInteger> maximumPlaytimeValidation = PositiveInteger.of("maximumPlaytime", item.getMaxplaytime().getVal());
-        final Validation<String, PositiveInteger> averagePlaytimeValidation = PositiveInteger.of("averagePlaytime", item.getPlayingtime().getVal());
+        final Validation<String, PositiveShort> minimumPlaytimeValidation = PositiveShort.of("minimumPlaytime", item.getMinplaytime().getVal());
+        final Validation<String, PositiveShort> maximumPlaytimeValidation = PositiveShort.of("maximumPlaytime", item.getMaxplaytime().getVal());
+        final Validation<String, PositiveShort> averagePlaytimeValidation = PositiveShort.of("averagePlaytime", item.getPlayingtime().getVal());
         final Validation<ErrorSummary, Playtime> playtimeValidation =
                 Validation.combine(minimumPlaytimeValidation, maximumPlaytimeValidation, averagePlaytimeValidation)
                         .ap(Playtime::of)
@@ -69,8 +69,8 @@ final class ItemsMapper {
                         .mapError(ErrorSummary.CURRIED_MULTI_MESSAGE_BUILDER.apply("players"));
 
         final String minimumAgePropertyName = "minimumAge";
-        final Validation<ErrorSummary, NonNegativeInteger> minimumAgeValidation =
-                NonNegativeInteger.of(minimumAgePropertyName, item.getMinage().getVal())
+        final Validation<ErrorSummary, NonNegativeShort> minimumAgeValidation =
+                NonNegativeShort.of(minimumAgePropertyName, item.getMinage().getVal())
                         .mapError(ErrorSummary.CURRIED_SINGLE_MESSAGE_BUILDER.apply(minimumAgePropertyName));
 
         final Validation<ErrorSummary, ImmutableSet<Link>> linksValidations = ErrorUtils.sequence(

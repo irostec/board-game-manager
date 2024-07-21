@@ -1,5 +1,6 @@
 package com.irostec.boardgamemanager.configuration.security.authentication.core.createuser.dependency;
 
+import com.irostec.boardgamemanager.common.type.ValidatedUsername;
 import io.vavr.control.Validation;
 import org.junit.jupiter.api.Test;
 

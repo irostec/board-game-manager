@@ -1,3 +1,5 @@
+#debug: true
+
 spring:
   application:
     name: board-game-manager
@@ -16,6 +18,12 @@ spring:
     # Make sure to include the / at the end of the path, even though the documentation doesn't say to do so
     # https://github.com/awspring/spring-cloud-aws/issues/923#issuecomment-1788623590
     import: aws-parameterstore:/config/board-game-manager/
+  jpa:
+    hibernate:
+      ddl-auto: update
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.yaml
 
 management:
   security:

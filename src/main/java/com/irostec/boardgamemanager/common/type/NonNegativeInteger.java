@@ -7,7 +7,7 @@ import lombok.Getter;
 
 /**
  * NonNegativeInteger
- * A wrapper for integers that cannot be negative, like counts and ages
+ * A wrapper for integers that cannot be negative, like counts
  */
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Getter

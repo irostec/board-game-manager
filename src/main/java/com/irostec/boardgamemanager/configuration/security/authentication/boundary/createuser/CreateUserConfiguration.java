@@ -1,5 +1,6 @@
 package com.irostec.boardgamemanager.configuration.security.authentication.boundary.createuser;
 
+import com.irostec.boardgamemanager.application.boundary.api.kafka.service.UserMessagingService;
 import com.irostec.boardgamemanager.configuration.security.authentication.core.CreateUserService;
 import com.irostec.boardgamemanager.configuration.security.authentication.core.createuser.dependency.SaveUser;
 import com.irostec.boardgamemanager.configuration.security.authentication.boundary.createuser.dependency.SaveUserInDynamoDb;
@@ -17,8 +18,13 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 class CreateUserConfiguration {
 
     @Bean
-    SaveUser saveUser(DynamoDbUserTable dynamoDbUserTable, DynamoDbEnhancedClient enhancedClient, PasswordEncoder passwordEncoder) {
-        return new SaveUserInDynamoDb(dynamoDbUserTable, enhancedClient, passwordEncoder);
+    SaveUser saveUser(
+        DynamoDbUserTable dynamoDbUserTable,
+        DynamoDbEnhancedClient enhancedClient,
+        PasswordEncoder passwordEncoder,
+        UserMessagingService userMessagingService
+    ) {
+        return new SaveUserInDynamoDb(dynamoDbUserTable, enhancedClient, passwordEncoder, userMessagingService);
     }
 
     @Bean

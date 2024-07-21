@@ -1,7 +1,6 @@
 package com.irostec.boardgamemanager.application.core.shared.bggapi.output;
 
-import com.irostec.boardgamemanager.application.core.shared.bggapi.output.Players;
-import com.irostec.boardgamemanager.common.type.PositiveInteger;
+import com.irostec.boardgamemanager.common.type.PositiveShort;
 import io.vavr.control.Validation;
 import org.junit.jupiter.api.Test;
 
@@ -20,8 +19,8 @@ class PlayersTest {
     @Test
     void givenAPlayers_whenItIsInitializedWithMoreMinimumPlayersThanMaximumPlayers_thenTheValidationShouldFail() {
 
-        final PositiveInteger minimumPlayers = PositiveInteger.of(MINIMUM_PLAYERS_PROPERTY_NAME, 5).get();
-        final PositiveInteger maximumPlayers = PositiveInteger.of(MAXIMUM_PLAYERS_PROPERTY_NAME, 4).get();
+        final PositiveShort minimumPlayers = PositiveShort.of(MINIMUM_PLAYERS_PROPERTY_NAME, 5).get();
+        final PositiveShort maximumPlayers = PositiveShort.of(MAXIMUM_PLAYERS_PROPERTY_NAME, 4).get();
 
         final Validation<String, Players> result = Players.of(minimumPlayers, maximumPlayers);
 
@@ -32,7 +31,7 @@ class PlayersTest {
     @Test
     void givenAPlayers_whenItIsInitializedWithEqualMinimumPlayersAndMaximumPlayers_thenTheValidationShouldSucceed() {
 
-        final PositiveInteger minimumPlayers = PositiveInteger.of(MINIMUM_PLAYERS_PROPERTY_NAME, 5).get();
+        final PositiveShort minimumPlayers = PositiveShort.of(MINIMUM_PLAYERS_PROPERTY_NAME, 5).get();
 
         final Validation<String, Players> result = Players.of(minimumPlayers, minimumPlayers);
 
@@ -45,8 +44,8 @@ class PlayersTest {
     @Test
     void givenAPlayers_whenItIsInitializedWithMoreMaximumPlayersThanMinimumPlayers_thenTheValidationShouldSucceed() {
 
-        final PositiveInteger minimumPlayers = PositiveInteger.of(MINIMUM_PLAYERS_PROPERTY_NAME, 5).get();
-        final PositiveInteger maximumPlayers = PositiveInteger.of(MAXIMUM_PLAYERS_PROPERTY_NAME, 6).get();
+        final PositiveShort minimumPlayers = PositiveShort.of(MINIMUM_PLAYERS_PROPERTY_NAME, 5).get();
+        final PositiveShort maximumPlayers = PositiveShort.of(MAXIMUM_PLAYERS_PROPERTY_NAME, 6).get();
 
         final Validation<String, Players> result = Players.of(minimumPlayers, maximumPlayers);
 

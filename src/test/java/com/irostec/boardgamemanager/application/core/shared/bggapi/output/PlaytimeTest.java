@@ -1,7 +1,6 @@
 package com.irostec.boardgamemanager.application.core.shared.bggapi.output;
 
-import com.irostec.boardgamemanager.application.core.shared.bggapi.output.Playtime;
-import com.irostec.boardgamemanager.common.type.PositiveInteger;
+import com.irostec.boardgamemanager.common.type.PositiveShort;
 import io.vavr.control.Validation;
 import org.junit.jupiter.api.Test;
 
@@ -21,9 +20,9 @@ class PlaytimeTest {
     @Test
     void givenAPlaytime_whenItIsInitializedWithMoreMinimumPlaytimeThanMaximumPlaytime_thenTheValidationShouldFail() {
 
-        final PositiveInteger minimumPlaytime = PositiveInteger.of(MINIMUM_PLAYTIME_PROPERTY_NAME, 6).get();
-        final PositiveInteger maximumPlaytime = PositiveInteger.of(MAXIMUM_PLAYTIME_PROPERTY_NAME, 4).get();
-        final PositiveInteger averagePlaytime = PositiveInteger.of(AVERAGE_PLAYTIME_PROPERTY_NAME, 5).get();
+        final PositiveShort minimumPlaytime = PositiveShort.of(MINIMUM_PLAYTIME_PROPERTY_NAME, 6).get();
+        final PositiveShort maximumPlaytime = PositiveShort.of(MAXIMUM_PLAYTIME_PROPERTY_NAME, 4).get();
+        final PositiveShort averagePlaytime = PositiveShort.of(AVERAGE_PLAYTIME_PROPERTY_NAME, 5).get();
 
         final Validation<String, Playtime> result = Playtime.of(minimumPlaytime, maximumPlaytime, averagePlaytime);
 
@@ -34,9 +33,9 @@ class PlaytimeTest {
     @Test
     void givenAPlaytime_whenItIsInitializedWithLessAveragePlaytimeThanMinimumPlaytime_thenTheValidationShouldFail() {
 
-        final PositiveInteger minimumPlaytime = PositiveInteger.of(MINIMUM_PLAYTIME_PROPERTY_NAME, 4).get();
-        final PositiveInteger maximumPlaytime = PositiveInteger.of(MAXIMUM_PLAYTIME_PROPERTY_NAME, 6).get();
-        final PositiveInteger averagePlaytime = PositiveInteger.of(AVERAGE_PLAYTIME_PROPERTY_NAME, 3).get();
+        final PositiveShort minimumPlaytime = PositiveShort.of(MINIMUM_PLAYTIME_PROPERTY_NAME, 4).get();
+        final PositiveShort maximumPlaytime = PositiveShort.of(MAXIMUM_PLAYTIME_PROPERTY_NAME, 6).get();
+        final PositiveShort averagePlaytime = PositiveShort.of(AVERAGE_PLAYTIME_PROPERTY_NAME, 3).get();
 
         final Validation<String, Playtime> result = Playtime.of(minimumPlaytime, maximumPlaytime, averagePlaytime);
 
@@ -47,9 +46,9 @@ class PlaytimeTest {
     @Test
     void givenAPlaytime_whenItIsInitializedWithMoreAveragePlaytimeThanMaximumPlaytime_thenTheValidationShouldFail() {
 
-        final PositiveInteger minimumPlaytime = PositiveInteger.of(MINIMUM_PLAYTIME_PROPERTY_NAME, 4).get();
-        final PositiveInteger maximumPlaytime = PositiveInteger.of(MAXIMUM_PLAYTIME_PROPERTY_NAME, 6).get();
-        final PositiveInteger averagePlaytime = PositiveInteger.of(AVERAGE_PLAYTIME_PROPERTY_NAME, 7).get();
+        final PositiveShort minimumPlaytime = PositiveShort.of(MINIMUM_PLAYTIME_PROPERTY_NAME, 4).get();
+        final PositiveShort maximumPlaytime = PositiveShort.of(MAXIMUM_PLAYTIME_PROPERTY_NAME, 6).get();
+        final PositiveShort averagePlaytime = PositiveShort.of(AVERAGE_PLAYTIME_PROPERTY_NAME, 7).get();
 
         final Validation<String, Playtime> result = Playtime.of(minimumPlaytime, maximumPlaytime, averagePlaytime);
 
@@ -60,9 +59,9 @@ class PlaytimeTest {
     @Test
     void givenAPlaytime_whenItIsInitializedWithValidInputs_thenTheValidationShouldSucceed() {
 
-        final PositiveInteger minimumPlaytime = PositiveInteger.of(MINIMUM_PLAYTIME_PROPERTY_NAME, 4).get();
-        final PositiveInteger maximumPlaytime = PositiveInteger.of(MAXIMUM_PLAYTIME_PROPERTY_NAME, 6).get();
-        final PositiveInteger averagePlaytime = PositiveInteger.of(AVERAGE_PLAYTIME_PROPERTY_NAME, 5).get();
+        final PositiveShort minimumPlaytime = PositiveShort.of(MINIMUM_PLAYTIME_PROPERTY_NAME, 4).get();
+        final PositiveShort maximumPlaytime = PositiveShort.of(MAXIMUM_PLAYTIME_PROPERTY_NAME, 6).get();
+        final PositiveShort averagePlaytime = PositiveShort.of(AVERAGE_PLAYTIME_PROPERTY_NAME, 5).get();
 
         final Validation<String, Playtime> result = Playtime.of(minimumPlaytime, maximumPlaytime, averagePlaytime);
 

@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.2.2</version>
+		<version>3.2.5</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.irostec</groupId>
@@ -83,6 +83,15 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-actuator</artifactId>
 		</dependency>
+
+		<!-- Spring Boot Starter Cache -->
+		<!-- Starter for using Spring Framework's caching support -->
+		<!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-cache -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-cache</artifactId>
+		</dependency>
+
 
 		<!-- Spring Cloud AWS starter dependencies -->
 		<!-- https://docs.awspring.io/spring-cloud-aws/docs/3.1.0/reference/html/index.html#starter-dependencies -->
@@ -203,10 +212,13 @@
 		<!-- Vavr -->
 		<!-- An object-functional library for Java 8+ -->
 		<!-- https://mvnrepository.com/artifact/io.vavr/vavr -->
+		<!-- Though originally intended to use the 1.x versions, these are not compatible with Spring Data, causing the application to fail at startup. -->
+		<!-- For more information, see https://github.com/spring-projects/spring-data-commons/issues/2946#issuecomment-1738856540 -->
+		<!-- "the 1.x development line comes with several binary breaking changes, e.g. Option was migrated from an interface into an abstract class (that is the reason you see the exception)." -->
 		<dependency>
 			<groupId>io.vavr</groupId>
 			<artifactId>vavr</artifactId>
-			<version>1.0.0-alpha-3</version>
+			<version>0.10.4</version>
 		</dependency>
 
 
@@ -291,6 +303,55 @@
 			<artifactId>retrofit</artifactId>
 			<version>2.9.0</version>
 		</dependency>
+
+
+		<!-- SQL RDBMS dependencies -->
+		<!-- Start -->
+
+		<!-- Spring Boot Starter Data JPA -->
+		<!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-data-jpa -->
+		<!-- Starter for using Spring Data JPA with Hibernate -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-jpa</artifactId>
+		</dependency>
+
+		<!-- PostgreSQL JDBC Driver -->
+		<!-- https://mvnrepository.com/artifact/org.postgresql/postgresql -->
+		<!-- PostgreSQL JDBC Driver Postgresql -->
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+
+		<!-- Liquibase -->
+		<!-- https://mvnrepository.com/artifact/org.liquibase/liquibase-core -->
+		<!-- Liquibase is a tool for managing and executing database changes. -->
+        <dependency>
+            <groupId>org.liquibase</groupId>
+            <artifactId>liquibase-core</artifactId>
+            <version>4.27.0</version>
+        </dependency>
+
+		<!-- SQL RDBMS dependencies -->
+		<!-- End -->
+
+		<!-- Spring Kafka Support -->
+		<!-- https://mvnrepository.com/artifact/org.springframework.kafka/spring-kafka -->
+		<!-- Spring Kafka Support -->
+		<dependency>
+			<groupId>org.springframework.kafka</groupId>
+			<artifactId>spring-kafka</artifactId>
+		</dependency>
+
+		<!-- Jackson Databind -->
+		<!-- General data-binding functionality for Jackson: works on core streaming API -->
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+		</dependency>
+
 
 		<!-- Spring Boot Starter Test -->
 		<!-- Starter for testing Spring Boot applications with libraries including JUnit Jupiter, Hamcrest and Mockito -->

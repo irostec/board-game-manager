@@ -1,12 +1,13 @@
 package com.irostec.boardgamemanager.configuration.security.authentication.boundary.createuser.dependency;
 
-import com.irostec.boardgamemanager.common.utility.LoggingUtils;
+import com.irostec.boardgamemanager.application.boundary.api.kafka.service.UserMessagingService;
+import com.irostec.boardgamemanager.common.utility.Logging;
 import com.irostec.boardgamemanager.configuration.security.authentication.core.createuser.dependency.SaveUser;
 import com.irostec.boardgamemanager.configuration.security.authentication.boundary.shared.dynamodb.DynamoDbUser;
 import com.irostec.boardgamemanager.configuration.security.authentication.boundary.shared.dynamodb.DynamoDbUserTable;
 import com.irostec.boardgamemanager.configuration.security.authentication.boundary.shared.dynamodb.Email;
 import com.irostec.boardgamemanager.configuration.security.authentication.core.createuser.error.PersistenceFailure;
-import com.irostec.boardgamemanager.configuration.security.authentication.core.createuser.dependency.ValidatedUserCreationData;
+import com.irostec.boardgamemanager.configuration.security.authentication.core.createuser.ValidatedUserCreationData;
 import com.irostec.boardgamemanager.configuration.security.authentication.core.getrolesandprivileges.output.BGMRole;
 import io.vavr.control.Either;
 import io.vavr.control.Try;
@@ -35,6 +36,7 @@ public final class SaveUserInDynamoDb implements SaveUser {
     private final DynamoDbUserTable dynamoDbUserTable;
     private final DynamoDbEnhancedClient enhancedClient;
     private final PasswordEncoder passwordEncoder;
+    private final UserMessagingService userMessagingService;
 
     @Override
     public Either<PersistenceFailure, Void> execute(ValidatedUserCreationData userData) {
@@ -44,7 +46,7 @@ public final class SaveUserInDynamoDb implements SaveUser {
 
         final String conditionExpression = String.format("attribute_not_exists(%s)", DynamoDbUserTable.Attributes.PARTITION_KEY);
 
-        LoggingUtils.info(logger, "execute", "Attempting to create a user in DynamoDB.", dynamoDbUser, email);
+        Logging.info(logger, "execute", "Attempting to create a user in DynamoDB.", dynamoDbUser, email);
 
         return Try.runRunnable(() ->
                 enhancedClient.transactWriteItems(
@@ -66,6 +68,7 @@ public final class SaveUserInDynamoDb implements SaveUser {
                             .build()
                 )
         )
+        .onSuccess(dummy -> this.userMessagingService.sendUserCreationMessage(userData.username().value()))
         .toEither()
         .mapLeft(PersistenceFailure::new);
 

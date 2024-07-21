@@ -1,8 +1,9 @@
 package com.irostec.boardgamemanager.application.core.getboardgamefrombgg.output;
 
 import com.irostec.boardgamemanager.common.type.NonNegativeDecimal;
-import com.irostec.boardgamemanager.common.type.NonNegativeInteger;
-import com.irostec.boardgamemanager.common.type.PositiveInteger;
+import com.irostec.boardgamemanager.common.type.NonNegativeShort;
+import com.irostec.boardgamemanager.common.type.PositiveShort;
+
 import java.util.Set;
 
 /**
@@ -14,13 +15,13 @@ public record BoardGameFromBGGWithPartitionedLinks (
     Set<Image> images,
     Set<Name> names,
     String description,
-    int yearOfPublication,
-    PositiveInteger minimumPlayers,
-    PositiveInteger maximumPlayers,
-    PositiveInteger averagePlaytimeInMinutes,
-    PositiveInteger minimumPlaytimeInMinutes,
-    PositiveInteger maximumPlaytimeInMinutes,
-    NonNegativeInteger minAge,
+    short yearOfPublication,
+    PositiveShort minimumPlayers,
+    PositiveShort maximumPlayers,
+    PositiveShort averagePlaytimeInMinutes,
+    PositiveShort minimumPlaytimeInMinutes,
+    PositiveShort maximumPlaytimeInMinutes,
+    NonNegativeShort minAge,
     References references,
     Set<Video> videos,
     NonNegativeDecimal averageRating

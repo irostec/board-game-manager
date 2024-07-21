@@ -1,6 +1,6 @@
 package com.irostec.boardgamemanager.configuration.security.authentication.boundary.createuser.caller;
 
-import com.irostec.boardgamemanager.common.utility.LoggingUtils;
+import com.irostec.boardgamemanager.common.utility.Logging;
 import com.irostec.boardgamemanager.configuration.security.authentication.core.CreateUserService;
 import com.irostec.boardgamemanager.configuration.security.authentication.core.createuser.error.CreateUserError;
 import com.irostec.boardgamemanager.configuration.security.authentication.core.createuser.error.InvalidInput;
@@ -54,7 +54,7 @@ class CreateUserController {
                 break;
             case PersistenceFailure persistenceFailure:
                 final String persistenceFailureMessage = "Couldn't create the user.";
-                LoggingUtils.error(logger, METHOD_NAME, persistenceFailureMessage, persistenceFailure.exception());
+                Logging.error(logger, METHOD_NAME, persistenceFailureMessage, persistenceFailure.exception());
                 break;
         }
 
@@ -73,7 +73,7 @@ class CreateUserController {
                 yield new ResponseEntity<>(invalidInputMessage, HttpStatus.BAD_REQUEST);
             }
             case PersistenceFailure persistenceFailure -> {
-                final String persistenceFailureMessage = "The user couldn't be persisted. Some of the possible reasons may be: a) The email already exists; b) The database is overloaded. Please try again, and if the problem persists, contact an adminisrator.";
+                final String persistenceFailureMessage = "The user couldn't be persisted. Some of the possible reasons may be: a) The email already exists; b) The database is overloaded. Please try again, and if the problem persists, contact an administrator.";
                 yield new ResponseEntity<>(persistenceFailureMessage, HttpStatus.CONFLICT);
             }
         };

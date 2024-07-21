@@ -1,6 +1,6 @@
 package com.irostec.boardgamemanager.common.error;
 
-import com.irostec.boardgamemanager.common.type.PositiveInteger;
+import com.irostec.boardgamemanager.common.type.PositiveShort;
 import io.vavr.control.Validation;
 import org.junit.jupiter.api.Test;
 
@@ -18,12 +18,12 @@ class ErrorUtilsTest {
     @Test
     void testSequenceWithErrors() {
 
-        final Validation<String, PositiveInteger> invalidPositiveInteger1 = PositiveInteger.of("invalidPositiveInteger1", -1);
-        final Validation<String, PositiveInteger> invalidPositiveInteger2 = PositiveInteger.of("invalidPositiveInteger2", 0);
-        final Validation<String, PositiveInteger> validPositiveInteger1 = PositiveInteger.of("validPositiveInteger1", 1);
-        final Validation<String, PositiveInteger> validPositiveInteger2 = PositiveInteger.of("validPositiveInteger2", Integer.MAX_VALUE);
+        final Validation<String, PositiveShort> invalidPositiveInteger1 = PositiveShort.of("invalidPositiveInteger1", -1);
+        final Validation<String, PositiveShort> invalidPositiveInteger2 = PositiveShort.of("invalidPositiveInteger2", 0);
+        final Validation<String, PositiveShort> validPositiveInteger1 = PositiveShort.of("validPositiveInteger1", 1);
+        final Validation<String, PositiveShort> validPositiveInteger2 = PositiveShort.of("validPositiveInteger2", Integer.MAX_VALUE);
 
-        final Stream<Validation<String, PositiveInteger>> validations =
+        final Stream<Validation<String, PositiveShort>> validations =
                 List.of(
                         invalidPositiveInteger1,
                         invalidPositiveInteger2,
@@ -32,7 +32,7 @@ class ErrorUtilsTest {
                 )
                 .stream();
 
-        final Validation<List<String>, List<PositiveInteger>> result = ErrorUtils.sequence(validations);
+        final Validation<List<String>, List<PositiveShort>> result = ErrorUtils.sequence(validations);
 
         assertTrue(result.isInvalid());
         final List<String> expectedErrorMessages =
@@ -44,16 +44,16 @@ class ErrorUtilsTest {
     @Test
     void testSequenceWithoutErrors() {
 
-        final Validation<String, PositiveInteger> validPositiveInteger1 = PositiveInteger.of("validPositiveInteger1", 1);
-        final Validation<String, PositiveInteger> validPositiveInteger2 = PositiveInteger.of("validPositiveInteger2", Integer.MAX_VALUE);
+        final Validation<String, PositiveShort> validPositiveInteger1 = PositiveShort.of("validPositiveInteger1", 1);
+        final Validation<String, PositiveShort> validPositiveInteger2 = PositiveShort.of("validPositiveInteger2", Integer.MAX_VALUE);
 
-        final Stream<Validation<String, PositiveInteger>> validations =
+        final Stream<Validation<String, PositiveShort>> validations =
                 List.of(validPositiveInteger1, validPositiveInteger2).stream();
 
-        final Validation<List<String>, List<PositiveInteger>> result = ErrorUtils.sequence(validations);
+        final Validation<List<String>, List<PositiveShort>> result = ErrorUtils.sequence(validations);
 
         assertTrue(result.isValid());
-        final List<PositiveInteger> expectedValues = List.of(validPositiveInteger1.get(), validPositiveInteger2.get());
+        final List<PositiveShort> expectedValues = List.of(validPositiveInteger1.get(), validPositiveInteger2.get());
         assertEquals(expectedValues, result.get());
 
     }

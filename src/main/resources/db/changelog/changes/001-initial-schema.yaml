@@ -1,0 +1,1662 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-table-board-game
+      author: liquibase-service
+      preConditions:
+        - onFail: MARK_RAN
+          not:
+            tableExists:
+              tableName: board_game
+      changes:
+        - createTable:
+            catalogName: board_game_manager
+            schemaName: public
+            tableName: board_game
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: board_game_pk
+                  name: id
+                  type: bigint
+              - column:
+                  constraints:
+                    nullable: false
+                  name: name
+                  type: varchar(100)
+              - column:
+                  name: description
+                  type: clob
+
+        - createTable:
+            catalogName: board_game_manager
+            schemaName: public
+            tableName: board_game_expansion
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: board_game_expansion_pk
+                  name: id
+                  type: bigint
+              - column:
+                  constraints:
+                    nullable: false
+                  name: expanded_board_game_id
+                  type: bigint
+              - column:
+                 constraints:
+                   nullable: false
+                 name: expander_board_game_id
+                 type: bigint
+        - addForeignKeyConstraint:
+            baseColumnNames: expanded_board_game_id
+            baseTableCatalogName: board_game_manager
+            baseTableName: board_game_expansion
+            baseTableSchemaName: public
+            constraintName: board_game_expansion_fk1
+            deferrable: true
+            initiallyDeferred: true
+            onDelete: CASCADE
+            onUpdate: RESTRICT
+            referencedColumnNames: id
+            referencedTableCatalogName: board_game_manager
+            referencedTableName: board_game
+            referencedTableSchemaName: public
+            validate: true
+        - addForeignKeyConstraint:
+            baseColumnNames: expander_board_game_id
+            baseTableCatalogName: board_game_manager
+            baseTableName: board_game_expansion
+            baseTableSchemaName: public
+            constraintName: board_game_expansion_fk2
+            deferrable: true
+            initiallyDeferred: true
+            onDelete: CASCADE
+            onUpdate: RESTRICT
+            referencedColumnNames: id
+            referencedTableCatalogName: board_game_manager
+            referencedTableName: board_game
+            referencedTableSchemaName: public
+            validate: true
+
+        - createTable:
+            catalogName: board_game_manager
+            schemaName: public
+            tableName: board_game_integration
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: board_game_integration_pk
+                  name: id
+                  type: bigint
+              - column:
+                  constraints:
+                    nullable: false
+                  name: integrated_board_game_id
+                  type: bigint
+              - column:
+                  constraints:
+                    nullable: false
+                  name: integrating_board_game_id
+                  type: bigint
+        - addForeignKeyConstraint:
+            baseColumnNames: integrated_board_game_id
+            baseTableCatalogName: board_game_manager
+            baseTableName: board_game_integration
+            baseTableSchemaName: public
+            constraintName: board_game_integration_fk1
+            deferrable: true
+            initiallyDeferred: true
+            onDelete: CASCADE
+            onUpdate: RESTRICT
+            referencedColumnNames: id
+            referencedTableCatalogName: board_game_manager
+            referencedTableName: board_game
+            referencedTableSchemaName: public
+            validate: true
+        - addForeignKeyConstraint:
+            baseColumnNames: integrating_board_game_id
+            baseTableCatalogName: board_game_manager
+            baseTableName: board_game_integration
+            baseTableSchemaName: public
+            constraintName: board_game_integration_fk2
+            deferrable: true
+            initiallyDeferred: true
+            onDelete: CASCADE
+            onUpdate: RESTRICT
+            referencedColumnNames: id
+            referencedTableCatalogName: board_game_manager
+            referencedTableName: board_game
+            referencedTableSchemaName: public
+            validate: true
+
+        - createTable:
+            catalogName: board_game_manager
+            schemaName: public
+            tableName: board_game_implementation
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: board_game_implementation_pk
+                  name: id
+                  type: bigint
+              - column:
+                  constraints:
+                    nullable: false
+                  name: implemented_board_game_id
+                  type: bigint
+              - column:
+                  constraints:
+                    nullable: false
+                  name: implementer_board_game_id
+                  type: bigint
+        - addForeignKeyConstraint:
+            baseColumnNames: implemented_board_game_id
+            baseTableCatalogName: board_game_manager
+            baseTableName: board_game_implementation
+            baseTableSchemaName: public
+            constraintName: board_game_implementation_fk1
+            deferrable: true
+            initiallyDeferred: true
+            onDelete: CASCADE
+            onUpdate: RESTRICT
+            referencedColumnNames: id
+            referencedTableCatalogName: board_game_manager
+            referencedTableName: board_game
+            referencedTableSchemaName: public
+            validate: true
+        - addForeignKeyConstraint:
+            baseColumnNames: implementer_board_game_id
+            baseTableCatalogName: board_game_manager
+            baseTableName: board_game_implementation
+            baseTableSchemaName: public
+            constraintName: board_game_implementation_fk2
+            deferrable: true
+            initiallyDeferred: true
+            onDelete: CASCADE
+            onUpdate: RESTRICT
+            referencedColumnNames: id
+            referencedTableCatalogName: board_game_manager
+            referencedTableName: board_game
+            referencedTableSchemaName: public
+            validate: true
+
+        - createTable:
+            catalogName: board_game_manager
+            schemaName: public
+            tableName: board_game_fixed_data
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: board_game_fixed_data_pk
+                  name: id
+                  type: bigint
+              - column:
+                  constraints:
+                    nullable: false
+                  name: board_game_id
+                  type: bigint
+              - column:
+                  constraints:
+                    nullable: false
+                  name: year_of_publication
+                  type: smallint
+              - column:
+                  constraints:
+                    nullable: false
+                    checkConstraint: (minimum_players > 0)
+                  name: minimum_players
+                  type: smallint
+              - column:
+                  constraints:
+                    nullable: false
+                    checkConstraint: (maximum_players > 0)
+                  name: maximum_players
+                  type: smallint
+              - column:
+                  constraints:
+                    nullable: false
+                    checkConstraint: (average_playtime_in_minutes > 0)
+                  name: average_playtime_in_minutes
+                  type: smallint
+              - column:
+                  constraints:
+                    nullable: false
+                    checkConstraint: (minimum_playtime_in_minutes > 0)
+                  name: minimum_playtime_in_minutes
+                  type: smallint
+              - column:
+                  constraints:
+                    nullable: false
+                    checkConstraint: (maximum_playtime_in_minutes > 0)
+                  name: maximum_playtime_in_minutes
+                  type: smallint
+              - column:
+                  constraints:
+                    nullable: false
+                    checkConstraint: (minimum_age > 0)
+                  name: minimum_age
+                  type: smallint
+        - addForeignKeyConstraint:
+            baseColumnNames: board_game_id
+            baseTableCatalogName: board_game_manager
+            baseTableName: board_game_fixed_data
+            baseTableSchemaName: public
+            constraintName: board_game_fixed_data_fk1
+            deferrable: true
+            initiallyDeferred: true
+            onDelete: CASCADE
+            onUpdate: RESTRICT
+            referencedColumnNames: id
+            referencedTableCatalogName: board_game_manager
+            referencedTableName: board_game
+            referencedTableSchemaName: public
+            validate: true
+
+        - createTable:
+            catalogName: board_game_manager
+            schemaName: public
+            tableName: board_game_user
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: board_game_user_pk
+                  name: id
+                  type: bigint
+              - column:
+                  constraints:
+                    nullable: false
+                  name: username
+                  type: varchar(100)
+        - addUniqueConstraint:
+            catalogName: board_game_manager
+            columnNames: username
+            constraintName: board_game_user_chk1
+            indexName: board_game_user_idx1
+            schemaName: public
+            tableName: board_game_user
+            validate: true
+
+        - createTable:
+            catalogName: board_game_manager
+            schemaName: public
+            tableName: board_game_variable_data
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: board_game_variable_data_pk
+                  name: id
+                  type: bigint
+              - column:
+                  constraints:
+                    nullable: false
+                  name: board_game_id
+                  type: bigint
+              - column:
+                 constraints:
+                   nullable: false
+                 name: board_game_user_id
+                 type: bigint
+              - column:
+                 constraints:
+                   nullable: true
+                 name: description
+                 type: clob
+        - addForeignKeyConstraint:
+            baseColumnNames: board_game_id
+            baseTableCatalogName: board_game_manager
+            baseTableName: board_game_variable_data
+            baseTableSchemaName: public
+            constraintName: board_game_variable_data_fk1
+            deferrable: true
+            initiallyDeferred: true
+            onDelete: CASCADE
+            onUpdate: RESTRICT
+            referencedColumnNames: id
+            referencedTableCatalogName: board_game_manager
+            referencedTableName: board_game
+            referencedTableSchemaName: public
+            validate: true
+        - addForeignKeyConstraint:
+            baseColumnNames: board_game_user_id
+            baseTableCatalogName: board_game_manager
+            baseTableName: board_game_variable_data
+            baseTableSchemaName: public
+            constraintName: board_game_variable_data_fk2
+            deferrable: true
+            initiallyDeferred: true
+            onDelete: CASCADE
+            onUpdate: RESTRICT
+            referencedColumnNames: id
+            referencedTableCatalogName: board_game_manager
+            referencedTableName: board_game_user
+            referencedTableSchemaName: public
+            validate: true
+
+        - createTable:
+            catalogName: board_game_manager
+            schemaName: public
+            tableName: data_source
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: data_source_pk
+                  name: id
+                  type: bigint
+              - column:
+                  constraints:
+                    nullable: false
+                  name: name
+                  type: varchar(30)
+        - addUniqueConstraint:
+            catalogName: board_game_manager
+            columnNames: name
+            constraintName: data_source_chk1
+            indexName: data_source_idx1
+            schemaName: public
+            tableName: data_source
+            validate: true
+        - createTable:
+            catalogName: board_game_manager
+            schemaName: public
+            tableName: board_game_reference
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: board_game_reference_pk
+                  name: id
+                  type: bigint
+              - column:
+                  constraints:
+                    nullable: false
+                  name: board_game_id
+                  type: bigint
+              - column:
+                  constraints:
+                    nullable: false
+                  name: data_source_id
+                  type: bigint
+              - column:
+                  constraints:
+                    nullable: false
+                  name: external_id
+                  type: varchar(100)
+              - column:
+                  constraints:
+                    nullable: true
+                    checkConstraint: (average_rating >= 0)
+                  name: average_rating
+                  type: decimal
+        - addForeignKeyConstraint:
+            baseColumnNames: board_game_id
+            baseTableCatalogName: board_game_manager
+            baseTableName: board_game_reference
+            baseTableSchemaName: public
+            constraintName: board_game_reference_fk1
+            deferrable: true
+            initiallyDeferred: true
+            onDelete: CASCADE
+            onUpdate: RESTRICT
+            referencedColumnNames: id
+            referencedTableCatalogName: board_game_manager
+            referencedTableName: board_game
+            referencedTableSchemaName: public
+            validate: true
+        - addForeignKeyConstraint:
+            baseColumnNames: data_source_id
+            baseTableCatalogName: board_game_manager
+            baseTableName: board_game_reference
+            baseTableSchemaName: public
+            constraintName: board_game_reference_fk2
+            deferrable: true
+            initiallyDeferred: true
+            onDelete: CASCADE
+            onUpdate: RESTRICT
+            referencedColumnNames: id
+            referencedTableCatalogName: board_game_manager
+            referencedTableName: data_source
+            referencedTableSchemaName: public
+            validate: true
+        - addUniqueConstraint:
+            catalogName: board_game_manager
+            columnNames: board_game_id, data_source_id
+            constraintName: board_game_reference_chk1
+            indexName: board_game_reference_idx1
+            schemaName: public
+            tableName: board_game_reference
+            validate: true
+        - addUniqueConstraint:
+            catalogName: board_game_manager
+            columnNames: data_source_id, external_id
+            constraintName: board_game_reference_chk2
+            indexName: board_game_reference_idx2
+            schemaName: public
+            tableName: board_game_reference
+            validate: true
+
+        - createTable:
+            catalogName: board_game_manager
+            schemaName: public
+            tableName: category
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: category_pk
+                  name: id
+                  type: bigint
+              - column:
+                  constraints:
+                    nullable: false
+                  name: data_source_id
+                  type: bigint
+              - column:
+                  constraints:
+                    nullable: false
+                  name: external_id
+                  type: varchar(100)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: name
+                  type: varchar(100)
+        - addForeignKeyConstraint:
+            baseColumnNames: data_source_id
+            baseTableCatalogName: board_game_manager
+            baseTableName: category
+            baseTableSchemaName: public
+            constraintName: category_fk1
+            deferrable: true
+            initiallyDeferred: true
+            onDelete: CASCADE
+            onUpdate: RESTRICT
+            referencedColumnNames: id
+            referencedTableCatalogName: board_game_manager
+            referencedTableName: data_source
+            referencedTableSchemaName: public
+            validate: true
+        - addUniqueConstraint:
+            catalogName: board_game_manager
+            columnNames: data_source_id, external_id
+            constraintName: category_chk1
+            indexName: category_idx1
+            schemaName: public
+            tableName: category
+            validate: true
+        - createTable:
+            catalogName: board_game_manager
+            schemaName: public
+            tableName: board_game_category
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: board_game_category_pk
+                  name: id
+                  type: bigint
+              - column:
+                  constraints:
+                    nullable: false
+                  name: board_game_id
+                  type: bigint
+              - column:
+                  constraints:
+                    nullable: false
+                  name: category_id
+                  type: bigint
+        - addForeignKeyConstraint:
+            baseColumnNames: board_game_id
+            baseTableCatalogName: board_game_manager
+            baseTableName: board_game_category
+            baseTableSchemaName: public
+            constraintName: board_game_category_fk1
+            deferrable: true
+            initiallyDeferred: true
+            onDelete: CASCADE
+            onUpdate: RESTRICT
+            referencedColumnNames: id
+            referencedTableCatalogName: board_game_manager
+            referencedTableName: board_game
+            referencedTableSchemaName: public
+            validate: true
+        - addForeignKeyConstraint:
+            baseColumnNames: category_id
+            baseTableCatalogName: board_game_manager
+            baseTableName: board_game_category
+            baseTableSchemaName: public
+            constraintName: board_game_category_fk2
+            deferrable: true
+            initiallyDeferred: true
+            onDelete: CASCADE
+            onUpdate: RESTRICT
+            referencedColumnNames: id
+            referencedTableCatalogName: board_game_manager
+            referencedTableName: category
+            referencedTableSchemaName: public
+            validate: true
+        - addUniqueConstraint:
+            catalogName: board_game_manager
+            columnNames: board_game_id, category_id
+            constraintName: board_game_category_chk1
+            indexName: board_game_category_idx1
+            schemaName: public
+            tableName: board_game_category
+            validate: true
+
+        - createTable:
+            catalogName: board_game_manager
+            schemaName: public
+            tableName: mechanic
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: mechanic_pk
+                  name: id
+                  type: bigint
+              - column:
+                  constraints:
+                    nullable: false
+                  name: data_source_id
+                  type: bigint
+              - column:
+                  constraints:
+                    nullable: false
+                  name: external_id
+                  type: varchar(100)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: name
+                  type: varchar(100)
+        - addForeignKeyConstraint:
+            baseColumnNames: data_source_id
+            baseTableCatalogName: board_game_manager
+            baseTableName: mechanic
+            baseTableSchemaName: public
+            constraintName: mechanic_fk1
+            deferrable: true
+            initiallyDeferred: true
+            onDelete: CASCADE
+            onUpdate: RESTRICT
+            referencedColumnNames: id
+            referencedTableCatalogName: board_game_manager
+            referencedTableName: data_source
+            referencedTableSchemaName: public
+            validate: true
+        - addUniqueConstraint:
+            catalogName: board_game_manager
+            columnNames: data_source_id, external_id
+            constraintName: mechanic_chk1
+            indexName: mechanic_idx1
+            schemaName: public
+            tableName: mechanic
+            validate: true
+        - createTable:
+            catalogName: board_game_manager
+            schemaName: public
+            tableName: board_game_mechanic
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: board_game_mechanic_pk
+                  name: id
+                  type: bigint
+              - column:
+                  constraints:
+                    nullable: false
+                  name: board_game_id
+                  type: bigint
+              - column:
+                  constraints:
+                    nullable: false
+                  name: mechanic_id
+                  type: bigint
+        - addForeignKeyConstraint:
+            baseColumnNames: board_game_id
+            baseTableCatalogName: board_game_manager
+            baseTableName: board_game_mechanic
+            baseTableSchemaName: public
+            constraintName: board_game_mechanic_fk1
+            deferrable: true
+            initiallyDeferred: true
+            onDelete: CASCADE
+            onUpdate: RESTRICT
+            referencedColumnNames: id
+            referencedTableCatalogName: board_game_manager
+            referencedTableName: board_game
+            referencedTableSchemaName: public
+            validate: true
+        - addForeignKeyConstraint:
+            baseColumnNames: mechanic_id
+            baseTableCatalogName: board_game_manager
+            baseTableName: board_game_mechanic
+            baseTableSchemaName: public
+            constraintName: board_game_mechanic_fk2
+            deferrable: true
+            initiallyDeferred: true
+            onDelete: CASCADE
+            onUpdate: RESTRICT
+            referencedColumnNames: id
+            referencedTableCatalogName: board_game_manager
+            referencedTableName: mechanic
+            referencedTableSchemaName: public
+            validate: true
+        - addUniqueConstraint:
+            catalogName: board_game_manager
+            columnNames: board_game_id, mechanic_id
+            constraintName: board_game_mechanic_chk1
+            indexName: board_game_mechanic_idx1
+            schemaName: public
+            tableName: board_game_mechanic
+            validate: true
+
+        - createTable:
+            catalogName: board_game_manager
+            schemaName: public
+            tableName: family
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: family_pk
+                  name: id
+                  type: bigint
+              - column:
+                  constraints:
+                    nullable: false
+                  name: data_source_id
+                  type: bigint
+              - column:
+                  constraints:
+                    nullable: false
+                  name: external_id
+                  type: varchar(100)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: name
+                  type: varchar(100)
+        - addForeignKeyConstraint:
+            baseColumnNames: data_source_id
+            baseTableCatalogName: board_game_manager
+            baseTableName: family
+            baseTableSchemaName: public
+            constraintName: family_fk1
+            deferrable: true
+            initiallyDeferred: true
+            onDelete: CASCADE
+            onUpdate: RESTRICT
+            referencedColumnNames: id
+            referencedTableCatalogName: board_game_manager
+            referencedTableName: data_source
+            referencedTableSchemaName: public
+            validate: true
+        - addUniqueConstraint:
+            catalogName: board_game_manager
+            columnNames: data_source_id, external_id
+            constraintName: family_chk1
+            indexName: family_idx1
+            schemaName: public
+            tableName: family
+            validate: true
+        - createTable:
+            catalogName: board_game_manager
+            schemaName: public
+            tableName: board_game_family
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: board_game_family_pk
+                  name: id
+                  type: bigint
+              - column:
+                  constraints:
+                    nullable: false
+                  name: board_game_id
+                  type: bigint
+              - column:
+                  constraints:
+                    nullable: false
+                  name: family_id
+                  type: bigint
+        - addForeignKeyConstraint:
+            baseColumnNames: board_game_id
+            baseTableCatalogName: board_game_manager
+            baseTableName: board_game_family
+            baseTableSchemaName: public
+            constraintName: board_game_family_fk1
+            deferrable: true
+            initiallyDeferred: true
+            onDelete: CASCADE
+            onUpdate: RESTRICT
+            referencedColumnNames: id
+            referencedTableCatalogName: board_game_manager
+            referencedTableName: board_game
+            referencedTableSchemaName: public
+            validate: true
+        - addForeignKeyConstraint:
+            baseColumnNames: family_id
+            baseTableCatalogName: board_game_manager
+            baseTableName: board_game_family
+            baseTableSchemaName: public
+            constraintName: board_game_family_fk2
+            deferrable: true
+            initiallyDeferred: true
+            onDelete: CASCADE
+            onUpdate: RESTRICT
+            referencedColumnNames: id
+            referencedTableCatalogName: board_game_manager
+            referencedTableName: family
+            referencedTableSchemaName: public
+            validate: true
+        - addUniqueConstraint:
+            catalogName: board_game_manager
+            columnNames: board_game_id, family_id
+            constraintName: board_game_family_chk1
+            indexName: board_game_family_idx1
+            schemaName: public
+            tableName: board_game_family
+            validate: true
+
+        - createTable:
+            catalogName: board_game_manager
+            schemaName: public
+            tableName: image_type
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: image_type_pk
+                  name: id
+                  type: bigint
+              - column:
+                  constraints:
+                    nullable: false
+                  name: name
+                  type: varchar(100)
+        - addUniqueConstraint:
+            catalogName: board_game_manager
+            columnNames: name
+            constraintName: image_type_chk1
+            indexName: image_type_idx1
+            schemaName: public
+            tableName: image_type
+            validate: true
+        - createTable:
+            catalogName: board_game_manager
+            schemaName: public
+            tableName: image
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: image_pk
+                  name: id
+                  type: bigint
+              - column:
+                  constraints:
+                    nullable: false
+                  name: image_type_id
+                  type: bigint
+              - column:
+                  constraints:
+                    nullable: false
+                  name: board_game_reference_id
+                  type: bigint
+              - column:
+                  constraints:
+                    nullable: false
+                  name: url
+                  type: varchar(500)
+        - addForeignKeyConstraint:
+            baseColumnNames: image_type_id
+            baseTableCatalogName: board_game_manager
+            baseTableName: image
+            baseTableSchemaName: public
+            constraintName: image_fk1
+            deferrable: true
+            initiallyDeferred: true
+            onDelete: CASCADE
+            onUpdate: RESTRICT
+            referencedColumnNames: id
+            referencedTableCatalogName: board_game_manager
+            referencedTableName: image_type
+            referencedTableSchemaName: public
+            validate: true
+        - addForeignKeyConstraint:
+            baseColumnNames: board_game_reference_id
+            baseTableCatalogName: board_game_manager
+            baseTableName: image
+            baseTableSchemaName: public
+            constraintName: image_fk2
+            deferrable: true
+            initiallyDeferred: true
+            onDelete: CASCADE
+            onUpdate: RESTRICT
+            referencedColumnNames: id
+            referencedTableCatalogName: board_game_manager
+            referencedTableName: board_game_reference
+            referencedTableSchemaName: public
+            validate: true
+        - addUniqueConstraint:
+            catalogName: board_game_manager
+            columnNames: board_game_reference_id, url
+            constraintName: image_chk1
+            indexName: image_idx1
+            schemaName: public
+            tableName: image
+            validate: true
+
+        - createTable:
+            catalogName: board_game_manager
+            schemaName: public
+            tableName: accessory
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: accessory_pk
+                  name: id
+                  type: bigint
+              - column:
+                  constraints:
+                    nullable: false
+                  name: name
+                  type: varchar(100)
+        - createTable:
+            catalogName: board_game_manager
+            schemaName: public
+            tableName: accessory_reference
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: accessory_reference_pk
+                  name: id
+                  type: bigint
+              - column:
+                  constraints:
+                    nullable: false
+                  name: data_source_id
+                  type: bigint
+              - column:
+                  constraints:
+                    nullable: false
+                  name: external_id
+                  type: varchar(100)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: accessory_id
+                  type: bigint
+        - addForeignKeyConstraint:
+            baseColumnNames: data_source_id
+            baseTableCatalogName: board_game_manager
+            baseTableName: accessory_reference
+            baseTableSchemaName: public
+            constraintName: accessory_reference_fk1
+            deferrable: true
+            initiallyDeferred: true
+            onDelete: CASCADE
+            onUpdate: RESTRICT
+            referencedColumnNames: id
+            referencedTableCatalogName: board_game_manager
+            referencedTableName: data_source
+            referencedTableSchemaName: public
+            validate: true
+        - addForeignKeyConstraint:
+            baseColumnNames: accessory_id
+            baseTableCatalogName: board_game_manager
+            baseTableName: accessory_reference
+            baseTableSchemaName: public
+            constraintName: accessory_reference_fk2
+            deferrable: true
+            initiallyDeferred: true
+            onDelete: CASCADE
+            onUpdate: RESTRICT
+            referencedColumnNames: id
+            referencedTableCatalogName: board_game_manager
+            referencedTableName: accessory
+            referencedTableSchemaName: public
+            validate: true
+        - addUniqueConstraint:
+            catalogName: board_game_manager
+            columnNames: data_source_id, external_id
+            constraintName: accessory_reference_chk1
+            indexName: accessory_reference_idx1
+            schemaName: public
+            tableName: accessory_reference
+            validate: true
+        - createTable:
+            catalogName: board_game_manager
+            schemaName: public
+            tableName: board_game_accessory
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: board_game_accessory_pk
+                  name: id
+                  type: bigint
+              - column:
+                  constraints:
+                    nullable: false
+                  name: board_game_id
+                  type: bigint
+              - column:
+                  constraints:
+                    nullable: false
+                  name: accessory_id
+                  type: bigint
+        - addForeignKeyConstraint:
+            baseColumnNames: board_game_id
+            baseTableCatalogName: board_game_manager
+            baseTableName: board_game_accessory
+            baseTableSchemaName: public
+            constraintName: board_game_accessory_fk1
+            deferrable: true
+            initiallyDeferred: true
+            onDelete: CASCADE
+            onUpdate: RESTRICT
+            referencedColumnNames: id
+            referencedTableCatalogName: board_game_manager
+            referencedTableName: board_game
+            referencedTableSchemaName: public
+            validate: true
+        - addForeignKeyConstraint:
+            baseColumnNames: accessory_id
+            baseTableCatalogName: board_game_manager
+            baseTableName: board_game_accessory
+            baseTableSchemaName: public
+            constraintName: board_game_accessory_fk2
+            deferrable: true
+            initiallyDeferred: true
+            onDelete: CASCADE
+            onUpdate: RESTRICT
+            referencedColumnNames: id
+            referencedTableCatalogName: board_game_manager
+            referencedTableName: accessory
+            referencedTableSchemaName: public
+            validate: true
+        - addUniqueConstraint:
+            catalogName: board_game_manager
+            columnNames: board_game_id, accessory_id
+            constraintName: board_game_accessory_chk1
+            indexName: board_game_accessory_idx1
+            schemaName: public
+            tableName: board_game_accessory
+            validate: true
+
+        - createTable:
+            catalogName: board_game_manager
+            schemaName: public
+            tableName: publisher
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: publisher_pk
+                  name: id
+                  type: bigint
+              - column:
+                  constraints:
+                    nullable: false
+                  name: name
+                  type: varchar(100)
+        - createTable:
+            catalogName: board_game_manager
+            schemaName: public
+            tableName: publisher_reference
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: publisher_reference_pk
+                  name: id
+                  type: bigint
+              - column:
+                  constraints:
+                    nullable: false
+                  name: data_source_id
+                  type: bigint
+              - column:
+                  constraints:
+                    nullable: false
+                  name: external_id
+                  type: varchar(100)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: publisher_id
+                  type: bigint
+        - addForeignKeyConstraint:
+            baseColumnNames: data_source_id
+            baseTableCatalogName: board_game_manager
+            baseTableName: publisher_reference
+            baseTableSchemaName: public
+            constraintName: publisher_reference_fk1
+            deferrable: true
+            initiallyDeferred: true
+            onDelete: CASCADE
+            onUpdate: RESTRICT
+            referencedColumnNames: id
+            referencedTableCatalogName: board_game_manager
+            referencedTableName: data_source
+            referencedTableSchemaName: public
+            validate: true
+        - addForeignKeyConstraint:
+            baseColumnNames: publisher_id
+            baseTableCatalogName: board_game_manager
+            baseTableName: publisher_reference
+            baseTableSchemaName: public
+            constraintName: publisher_reference_fk2
+            deferrable: true
+            initiallyDeferred: true
+            onDelete: CASCADE
+            onUpdate: RESTRICT
+            referencedColumnNames: id
+            referencedTableCatalogName: board_game_manager
+            referencedTableName: publisher
+            referencedTableSchemaName: public
+            validate: true
+        - addUniqueConstraint:
+            catalogName: board_game_manager
+            columnNames: data_source_id, external_id
+            constraintName: publisher_reference_chk1
+            indexName: publisher_reference_idx1
+            schemaName: public
+            tableName: publisher_reference
+            validate: true
+        - createTable:
+            catalogName: board_game_manager
+            schemaName: public
+            tableName: board_game_publisher
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: board_game_publisher_pk
+                  name: id
+                  type: bigint
+              - column:
+                  constraints:
+                    nullable: false
+                  name: board_game_id
+                  type: bigint
+              - column:
+                  constraints:
+                    nullable: false
+                  name: publisher_id
+                  type: bigint
+        - addForeignKeyConstraint:
+            baseColumnNames: board_game_id
+            baseTableCatalogName: board_game_manager
+            baseTableName: board_game_publisher
+            baseTableSchemaName: public
+            constraintName: board_game_publisher_fk1
+            deferrable: true
+            initiallyDeferred: true
+            onDelete: CASCADE
+            onUpdate: RESTRICT
+            referencedColumnNames: id
+            referencedTableCatalogName: board_game_manager
+            referencedTableName: board_game
+            referencedTableSchemaName: public
+            validate: true
+        - addForeignKeyConstraint:
+            baseColumnNames: publisher_id
+            baseTableCatalogName: board_game_manager
+            baseTableName: board_game_publisher
+            baseTableSchemaName: public
+            constraintName: board_game_publisher_fk2
+            deferrable: true
+            initiallyDeferred: true
+            onDelete: CASCADE
+            onUpdate: RESTRICT
+            referencedColumnNames: id
+            referencedTableCatalogName: board_game_manager
+            referencedTableName: publisher
+            referencedTableSchemaName: public
+            validate: true
+        - addUniqueConstraint:
+            catalogName: board_game_manager
+            columnNames: board_game_id, publisher_id
+            constraintName: board_game_publisher_chk1
+            indexName: board_game_publisher_idx1
+            schemaName: public
+            tableName: board_game_publisher
+            validate: true
+
+        - createTable:
+            catalogName: board_game_manager
+            schemaName: public
+            tableName: designer
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: designer_pk
+                  name: id
+                  type: bigint
+              - column:
+                  constraints:
+                    nullable: false
+                  name: name
+                  type: varchar(100)
+        - createTable:
+            catalogName: board_game_manager
+            schemaName: public
+            tableName: designer_reference
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: designer_reference_pk
+                  name: id
+                  type: bigint
+              - column:
+                  constraints:
+                    nullable: false
+                  name: data_source_id
+                  type: bigint
+              - column:
+                  constraints:
+                    nullable: false
+                  name: external_id
+                  type: varchar(100)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: designer_id
+                  type: bigint
+        - addForeignKeyConstraint:
+            baseColumnNames: data_source_id
+            baseTableCatalogName: board_game_manager
+            baseTableName: designer_reference
+            baseTableSchemaName: public
+            constraintName: designer_reference_fk1
+            deferrable: true
+            initiallyDeferred: true
+            onDelete: CASCADE
+            onUpdate: RESTRICT
+            referencedColumnNames: id
+            referencedTableCatalogName: board_game_manager
+            referencedTableName: data_source
+            referencedTableSchemaName: public
+            validate: true
+        - addForeignKeyConstraint:
+            baseColumnNames: designer_id
+            baseTableCatalogName: board_game_manager
+            baseTableName: designer_reference
+            baseTableSchemaName: public
+            constraintName: designer_reference_fk2
+            deferrable: true
+            initiallyDeferred: true
+            onDelete: CASCADE
+            onUpdate: RESTRICT
+            referencedColumnNames: id
+            referencedTableCatalogName: board_game_manager
+            referencedTableName: designer
+            referencedTableSchemaName: public
+            validate: true
+        - addUniqueConstraint:
+            catalogName: board_game_manager
+            columnNames: data_source_id, external_id
+            constraintName: designer_reference_chk1
+            indexName: designer_reference_idx1
+            schemaName: public
+            tableName: designer_reference
+            validate: true
+        - createTable:
+            catalogName: board_game_manager
+            schemaName: public
+            tableName: board_game_designer
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: board_game_designer_pk
+                  name: id
+                  type: bigint
+              - column:
+                  constraints:
+                    nullable: false
+                  name: board_game_id
+                  type: bigint
+              - column:
+                  constraints:
+                    nullable: false
+                  name: designer_id
+                  type: bigint
+        - addForeignKeyConstraint:
+            baseColumnNames: board_game_id
+            baseTableCatalogName: board_game_manager
+            baseTableName: board_game_designer
+            baseTableSchemaName: public
+            constraintName: board_game_designer_fk1
+            deferrable: true
+            initiallyDeferred: true
+            onDelete: CASCADE
+            onUpdate: RESTRICT
+            referencedColumnNames: id
+            referencedTableCatalogName: board_game_manager
+            referencedTableName: board_game
+            referencedTableSchemaName: public
+            validate: true
+        - addForeignKeyConstraint:
+            baseColumnNames: designer_id
+            baseTableCatalogName: board_game_manager
+            baseTableName: board_game_designer
+            baseTableSchemaName: public
+            constraintName: board_game_designer_fk2
+            deferrable: true
+            initiallyDeferred: true
+            onDelete: CASCADE
+            onUpdate: RESTRICT
+            referencedColumnNames: id
+            referencedTableCatalogName: board_game_manager
+            referencedTableName: designer
+            referencedTableSchemaName: public
+            validate: true
+        - addUniqueConstraint:
+            catalogName: board_game_manager
+            columnNames: board_game_id, designer_id
+            constraintName: board_game_designer_chk1
+            indexName: board_game_designer_idx1
+            schemaName: public
+            tableName: board_game_designer
+            validate: true
+
+        - createTable:
+            catalogName: board_game_manager
+            schemaName: public
+            tableName: artist
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: artist_pk
+                  name: id
+                  type: bigint
+              - column:
+                  constraints:
+                    nullable: false
+                  name: name
+                  type: varchar(100)
+        - createTable:
+            catalogName: board_game_manager
+            schemaName: public
+            tableName: artist_reference
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: artist_reference_pk
+                  name: id
+                  type: bigint
+              - column:
+                  constraints:
+                    nullable: false
+                  name: data_source_id
+                  type: bigint
+              - column:
+                  constraints:
+                    nullable: false
+                  name: external_id
+                  type: varchar(100)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: artist_id
+                  type: bigint
+        - addForeignKeyConstraint:
+            baseColumnNames: data_source_id
+            baseTableCatalogName: board_game_manager
+            baseTableName: artist_reference
+            baseTableSchemaName: public
+            constraintName: artist_reference_fk1
+            deferrable: true
+            initiallyDeferred: true
+            onDelete: CASCADE
+            onUpdate: RESTRICT
+            referencedColumnNames: id
+            referencedTableCatalogName: board_game_manager
+            referencedTableName: data_source
+            referencedTableSchemaName: public
+            validate: true
+        - addForeignKeyConstraint:
+            baseColumnNames: artist_id
+            baseTableCatalogName: board_game_manager
+            baseTableName: artist_reference
+            baseTableSchemaName: public
+            constraintName: artist_reference_fk2
+            deferrable: true
+            initiallyDeferred: true
+            onDelete: CASCADE
+            onUpdate: RESTRICT
+            referencedColumnNames: id
+            referencedTableCatalogName: board_game_manager
+            referencedTableName: artist
+            referencedTableSchemaName: public
+            validate: true
+        - addUniqueConstraint:
+            catalogName: board_game_manager
+            columnNames: data_source_id, external_id
+            constraintName: artist_reference_chk1
+            indexName: artist_reference_idx1
+            schemaName: public
+            tableName: artist_reference
+            validate: true
+        - createTable:
+            catalogName: board_game_manager
+            schemaName: public
+            tableName: board_game_artist
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: board_game_artist_pk
+                  name: id
+                  type: bigint
+              - column:
+                  constraints:
+                    nullable: false
+                  name: board_game_id
+                  type: bigint
+              - column:
+                  constraints:
+                    nullable: false
+                  name: artist_id
+                  type: bigint
+        - addForeignKeyConstraint:
+            baseColumnNames: board_game_id
+            baseTableCatalogName: board_game_manager
+            baseTableName: board_game_artist
+            baseTableSchemaName: public
+            constraintName: board_game_artist_fk1
+            deferrable: true
+            initiallyDeferred: true
+            onDelete: CASCADE
+            onUpdate: RESTRICT
+            referencedColumnNames: id
+            referencedTableCatalogName: board_game_manager
+            referencedTableName: board_game
+            referencedTableSchemaName: public
+            validate: true
+        - addForeignKeyConstraint:
+            baseColumnNames: artist_id
+            baseTableCatalogName: board_game_manager
+            baseTableName: board_game_artist
+            baseTableSchemaName: public
+            constraintName: board_game_artist_fk2
+            deferrable: true
+            initiallyDeferred: true
+            onDelete: CASCADE
+            onUpdate: RESTRICT
+            referencedColumnNames: id
+            referencedTableCatalogName: board_game_manager
+            referencedTableName: artist
+            referencedTableSchemaName: public
+            validate: true
+        - addUniqueConstraint:
+            catalogName: board_game_manager
+            columnNames: board_game_id, artist_id
+            constraintName: board_game_artist_chk1
+            indexName: board_game_artist_idx1
+            schemaName: public
+            tableName: board_game_artist
+            validate: true
+
+        - createTable:
+            catalogName: board_game_manager
+            schemaName: public
+            tableName: board_game_inclusion
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: board_game_inclusion_pk
+                  name: id
+                  type: bigint
+              - column:
+                  constraints:
+                    nullable: false
+                  name: reason
+                  type: clob
+        - createTable:
+            catalogName: board_game_manager
+            schemaName: public
+            tableName: board_game_inclusion_detail
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: board_game_inclusion_detail_pk
+                  name: id
+                  type: bigint
+              - column:
+                  constraints:
+                    nullable: false
+                  name: board_game_inclusion_id
+                  type: bigint
+              - column:
+                  constraints:
+                    nullable: false
+                  name: board_game_user_id
+                  type: bigint
+              - column:
+                  constraints:
+                    nullable: false
+                  name: board_game_id
+                  type: bigint
+        - addForeignKeyConstraint:
+            baseColumnNames: board_game_inclusion_id
+            baseTableCatalogName: board_game_manager
+            baseTableName: board_game_inclusion_detail
+            baseTableSchemaName: public
+            constraintName: board_game_inclusion_detail_fk1
+            deferrable: true
+            initiallyDeferred: true
+            onDelete: CASCADE
+            onUpdate: RESTRICT
+            referencedColumnNames: id
+            referencedTableCatalogName: board_game_manager
+            referencedTableName: board_game_inclusion
+            referencedTableSchemaName: public
+            validate: true
+        - addForeignKeyConstraint:
+            baseColumnNames: board_game_id
+            baseTableCatalogName: board_game_manager
+            baseTableName: board_game_inclusion_detail
+            baseTableSchemaName: public
+            constraintName: board_game_inclusion_detail_fk2
+            deferrable: true
+            initiallyDeferred: true
+            onDelete: CASCADE
+            onUpdate: RESTRICT
+            referencedColumnNames: id
+            referencedTableCatalogName: board_game_manager
+            referencedTableName: board_game
+            referencedTableSchemaName: public
+            validate: true
+        - addForeignKeyConstraint:
+            baseColumnNames: board_game_user_id
+            baseTableCatalogName: board_game_manager
+            baseTableName: board_game_inclusion_detail
+            baseTableSchemaName: public
+            constraintName: board_game_inclusion_detail_fk3
+            deferrable: true
+            initiallyDeferred: true
+            onDelete: CASCADE
+            onUpdate: RESTRICT
+            referencedColumnNames: id
+            referencedTableCatalogName: board_game_manager
+            referencedTableName: board_game_user
+            referencedTableSchemaName: public
+            validate: true
+        - addUniqueConstraint:
+            catalogName: board_game_manager
+            columnNames: board_game_user_id, board_game_id
+            constraintName: board_game_inclusion_detail_chk1
+            indexName: board_game_inclusion_detail_idx1
+            schemaName: public
+            tableName: board_game_inclusion_detail
+            validate: true
+        - createTable:
+            catalogName: board_game_manager
+            schemaName: public
+            tableName: board_game_rating
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: board_game_rating_pk
+                  name: id
+                  type: bigint
+              - column:
+                  constraints:
+                    nullable: false
+                  name: board_game_inclusion_detail_id
+                  type: bigint
+              - column:
+                  constraints:
+                    nullable: false
+                    checkConstraint: (rating >= 0 AND rating <= 0)
+                  name: rating
+                  type: decimal
+        - addForeignKeyConstraint:
+            baseColumnNames: board_game_inclusion_detail_id
+            baseTableCatalogName: board_game_manager
+            baseTableName: board_game_rating
+            baseTableSchemaName: public
+            constraintName: board_game_rating_fk1
+            deferrable: true
+            initiallyDeferred: true
+            onDelete: CASCADE
+            onUpdate: RESTRICT
+            referencedColumnNames: id
+            referencedTableCatalogName: board_game_manager
+            referencedTableName: board_game_inclusion_detail
+            referencedTableSchemaName: public
+            validate: true
+        - addUniqueConstraint:
+            catalogName: board_game_manager
+            columnNames: board_game_inclusion_detail_id
+            constraintName: board_game_rating_chk1
+            indexName: board_game_rating_idx1
+            schemaName: public
+            tableName: board_game_rating
+            validate: true
+        - createTable:
+            catalogName: board_game_manager
+            schemaName: public
+            tableName: board_game_rating_comment
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: board_game_rating_comment_pk
+                  name: id
+                  type: bigint
+              - column:
+                  constraints:
+                    nullable: false
+                  name: board_game_rating_id
+                  type: bigint
+              - column:
+                  constraints:
+                    nullable: false
+                  name: comment
+                  type: clob
+        - addForeignKeyConstraint:
+            baseColumnNames: board_game_rating_id
+            baseTableCatalogName: board_game_manager
+            baseTableName: board_game_rating_comment
+            baseTableSchemaName: public
+            constraintName: board_game_rating_comment_fk1
+            deferrable: true
+            initiallyDeferred: true
+            onDelete: CASCADE
+            onUpdate: RESTRICT
+            referencedColumnNames: id
+            referencedTableCatalogName: board_game_manager
+            referencedTableName: board_game_rating
+            referencedTableSchemaName: public
+            validate: true

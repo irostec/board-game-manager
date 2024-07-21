@@ -1,10 +1,10 @@
 package com.irostec.boardgamemanager.configuration.security.authentication.core;
 
 import com.irostec.boardgamemanager.configuration.security.authentication.core.createuser.dependency.SaveUser;
-import com.irostec.boardgamemanager.configuration.security.authentication.core.createuser.dependency.ValidatedEmail;
-import com.irostec.boardgamemanager.configuration.security.authentication.core.createuser.dependency.ValidatedPassword;
-import com.irostec.boardgamemanager.configuration.security.authentication.core.createuser.dependency.ValidatedUserCreationData;
-import com.irostec.boardgamemanager.configuration.security.authentication.core.createuser.dependency.ValidatedUsername;
+import com.irostec.boardgamemanager.configuration.security.authentication.core.createuser.ValidatedEmail;
+import com.irostec.boardgamemanager.configuration.security.authentication.core.createuser.ValidatedPassword;
+import com.irostec.boardgamemanager.configuration.security.authentication.core.createuser.ValidatedUserCreationData;
+import com.irostec.boardgamemanager.common.type.ValidatedUsername;
 import com.irostec.boardgamemanager.configuration.security.authentication.core.createuser.input.UserData;
 import io.vavr.control.Either;
 import io.vavr.control.Validation;

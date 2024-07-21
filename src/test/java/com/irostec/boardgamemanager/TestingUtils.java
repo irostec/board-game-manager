@@ -3,7 +3,7 @@ package com.irostec.boardgamemanager;
 import com.irostec.boardgamemanager.application.core.shared.bggapi.output.*;
 import com.irostec.boardgamemanager.common.type.NonNegativeDecimal;
 import com.irostec.boardgamemanager.common.type.NonNegativeInteger;
-import com.irostec.boardgamemanager.common.type.PositiveInteger;
+import com.irostec.boardgamemanager.common.type.PositiveShort;
 
 import java.util.List;
 import java.util.Set;
@@ -37,13 +37,13 @@ public final class TestingUtils {
 
         final int yearPublished = 2017;
 
-        final PositiveInteger minimumPlayers = PositiveInteger.of("minimumPlayers", 1).get();
-        final PositiveInteger maximumPlayers = PositiveInteger.of("maximumPlayers", 4).get();
+        final PositiveShort minimumPlayers = PositiveShort.of("minimumPlayers", 1).get();
+        final PositiveShort maximumPlayers = PositiveShort.of("maximumPlayers", 4).get();
         final Players players = Players.of(minimumPlayers, maximumPlayers).get();
 
-        final PositiveInteger minimumPlaytime = PositiveInteger.of("minimumPlaytime", 60).get();
-        final PositiveInteger maximumPlaytime = PositiveInteger.of("maximumPlaytime", 120).get();
-        final PositiveInteger averagePlaytime = PositiveInteger.of("averagePlaytime", 120).get();
+        final PositiveShort minimumPlaytime = PositiveShort.of("minimumPlaytime", 60).get();
+        final PositiveShort maximumPlaytime = PositiveShort.of("maximumPlaytime", 120).get();
+        final PositiveShort averagePlaytime = PositiveShort.of("averagePlaytime", 120).get();
         final Playtime playtime = Playtime.of(minimumPlaytime, maximumPlaytime, averagePlaytime).get();
 
         final NonNegativeInteger minimumAge = NonNegativeInteger.of("minimumAge", 14).get();

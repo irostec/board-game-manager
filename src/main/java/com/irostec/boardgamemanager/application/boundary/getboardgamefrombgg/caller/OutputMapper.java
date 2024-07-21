@@ -11,7 +11,7 @@ import java.util.Map;
 import java.util.function.Function;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.tuple.ImmutablePair;
-import static com.irostec.boardgamemanager.common.utility.MappingUtils.toListOfMaps;
+import static com.irostec.boardgamemanager.common.utility.Mapping.toListOfMaps;
 
 /**
  * OutputMapper

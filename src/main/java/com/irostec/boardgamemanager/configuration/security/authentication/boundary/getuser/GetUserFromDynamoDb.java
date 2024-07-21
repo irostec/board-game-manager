@@ -1,6 +1,6 @@
 package com.irostec.boardgamemanager.configuration.security.authentication.boundary.getuser;
 
-import com.irostec.boardgamemanager.common.utility.LoggingUtils;
+import com.irostec.boardgamemanager.common.utility.Logging;
 import com.irostec.boardgamemanager.configuration.security.authentication.core.GetUserService;
 import com.irostec.boardgamemanager.configuration.security.authentication.core.getuser.error.GetUserError;
 import com.irostec.boardgamemanager.configuration.security.authentication.core.getuser.output.BGMUser;
@@ -36,7 +36,7 @@ public final class GetUserFromDynamoDb implements GetUserService {
         final String partitionKeyForUser = dynamoDbUserTable.keyFactory().buildPartitionKeyForUser(username);
         final String sortKeyForUser = dynamoDbUserTable.keyFactory().buildSortKeyForUser(username);
 
-        LoggingUtils.info(logger,
+        Logging.info(logger,
                 "execute",
                 String.format("Attempting to get user with username '%s' from DynamoDB.", username));
 

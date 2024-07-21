@@ -22,3 +22,38 @@ services:
       - SPLUNK_START_ARGS=--accept-license
       - SPLUNK_HEC_TOKEN=7f99549c-adfb-482b-af62-c3b3dc103edd
       - SPLUNK_PASSWORD=splunk_password
+  bgm-sql-database:
+    image: 'postgres:16.2-alpine'
+    container_name: bgm-sql-database
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=verysecurepassword
+      - POSTGRES_DB=bgmdb
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.1
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - 2181:2181
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.1
+    depends_on:
+      - zookeeper
+    ports:
+      - 9092:9092
+      - 29092:29092
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      # The kafka service is exposed to the host applications through port 29092, but it is actually advertised on port 9092 within the container environment.
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      # Will create a Kafka topic with the name new-users, which will have 1 partition and 3 replicas.
+      KAFKA_CREATE_TOPICS: "new-users:1:1"

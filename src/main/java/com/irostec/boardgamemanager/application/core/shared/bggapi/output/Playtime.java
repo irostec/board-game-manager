@@ -1,6 +1,6 @@
 package com.irostec.boardgamemanager.application.core.shared.bggapi.output;
 
-import com.irostec.boardgamemanager.common.type.PositiveInteger;
+import com.irostec.boardgamemanager.common.type.PositiveShort;
 import io.vavr.control.Validation;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -14,13 +14,13 @@ import lombok.Getter;
 @Getter
 public final class Playtime {
 
-    private final PositiveInteger minimum;
-    private final PositiveInteger maximum;
-    private final PositiveInteger average;
+    private final PositiveShort minimum;
+    private final PositiveShort maximum;
+    private final PositiveShort average;
 
-    public static Validation<String, Playtime> of(PositiveInteger minimum,
-                                                    PositiveInteger maximum,
-                                                    PositiveInteger average) {
+    public static Validation<String, Playtime> of(PositiveShort minimum,
+                                                  PositiveShort maximum,
+                                                  PositiveShort average) {
 
         return minimum.getValue() > maximum.getValue() ?
                 Validation.invalid(

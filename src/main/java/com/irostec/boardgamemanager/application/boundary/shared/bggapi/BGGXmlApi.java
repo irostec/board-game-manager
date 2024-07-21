@@ -5,9 +5,8 @@ import com.irostec.boardgamemanager.application.core.shared.BGGApi;
 import com.irostec.boardgamemanager.application.core.shared.bggapi.error.BGGApiError;
 import com.irostec.boardgamemanager.application.core.shared.bggapi.error.BoardGameNotFound;
 import com.irostec.boardgamemanager.application.core.shared.bggapi.error.ExternalServiceFailure;
-import com.irostec.boardgamemanager.application.boundary.shared.Endpoints;
 import com.irostec.boardgamemanager.application.core.shared.bggapi.output.BoardGameFromBGG;
-import com.irostec.boardgamemanager.common.utility.LoggingUtils;
+import com.irostec.boardgamemanager.common.utility.Logging;
 import io.vavr.control.Either;
 import io.vavr.control.Validation;
 import org.apache.logging.log4j.LogManager;
@@ -35,10 +34,14 @@ final class BGGXmlApi implements BGGApi {
     @Override
     public Either<BGGApiError, BoardGameFromBGG> execute(String externalId) {
 
-        LoggingUtils.info(logger, "execute", String.format("Attempting to find a board game by id '%s' in boardgamegeek.com", externalId));
+        Logging.info(logger, "execute", String.format("Searching for a board game with id '%s' in boardgamegeek.com", externalId));
 
         Either<BGGApiError, Items> callResult = RetrofitUtils.handleCall(bggEndpoints.getBoardGamesById(externalId, "boardgame", "1", "1"))
                 .mapLeft(httpError -> new ExternalServiceFailure(externalId, httpError));
+
+        callResult
+            .peek(items -> logger.info(String.format("Successfully searched for a board game with id '%s' in boardgamegeek.com", externalId)))
+            .peekLeft(error -> logger.info(String.format("Error searching for a board game with id '%s' in boardgamegeek.com", externalId)));
 
         return callResult
                 .flatMap(items ->
