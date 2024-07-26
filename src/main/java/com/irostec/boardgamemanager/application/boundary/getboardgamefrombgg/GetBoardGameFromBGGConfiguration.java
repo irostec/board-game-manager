@@ -1,6 +1,6 @@
 package com.irostec.boardgamemanager.application.boundary.getboardgamefrombgg;
 
-import com.irostec.boardgamemanager.application.core.GetBoardGameFromBGGService;
+import com.irostec.boardgamemanager.application.core.GetBoardGameFromBGG;
 import com.irostec.boardgamemanager.application.core.shared.BGGApi;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,8 +13,8 @@ import org.springframework.context.annotation.Configuration;
 class GetBoardGameFromBGGConfiguration {
 
     @Bean
-    public GetBoardGameFromBGGService boardGameExternalQuery(BGGApi bggApi) {
-        return new GetBoardGameFromBGGService(bggApi);
+    public GetBoardGameFromBGG boardGameExternalQuery(BGGApi bggApi) {
+        return new GetBoardGameFromBGG(bggApi);
     }
 
 }

@@ -1,11 +1,6 @@
 package com.irostec.boardgamemanager.application.boundary.createandincludeboardgamefrombgg.caller;
 
-import com.irostec.boardgamemanager.application.core.CreateAndIncludeBoardGameFromBGGService;
-import com.irostec.boardgamemanager.application.core.createandincludeboardgamefrombgg.error.BoardGameCreationError;
-import com.irostec.boardgamemanager.application.core.createandincludeboardgamefrombgg.error.BoardGameInclusionError;
-import com.irostec.boardgamemanager.application.core.createandincludeboardgamefrombgg.error.CreateAndIncludeBoardGameFromBGGError;
-import com.irostec.boardgamemanager.application.core.createandincludeboardgamefrombgg.error.UserRetrievalError;
-import com.irostec.boardgamemanager.application.core.createandincludeboardgamefrombgg.input.RequestToCreateAndIncludeBoardGameFromBGG;
+import com.irostec.boardgamemanager.application.core.CreateAndIncludeBoardGameFromBGG;
 import com.irostec.boardgamemanager.configuration.security.annotation.HasUserRole;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -19,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 @AllArgsConstructor
 public class CreateAndIncludeBoardGameFromBGGController {
 
-    private final CreateAndIncludeBoardGameFromBGGService createAndIncludeBoardGameFromBGGService;
+    private final CreateAndIncludeBoardGameFromBGG createAndIncludeBoardGameFromBGG;
 
     @PostMapping(value = "/boardgamegeek/{externalId}")
     @HasUserRole
@@ -28,36 +23,44 @@ public class CreateAndIncludeBoardGameFromBGGController {
         @Valid @RequestBody Request request
     ) {
 
-        return
-            createAndIncludeBoardGameFromBGGService.execute(
-                new RequestToCreateAndIncludeBoardGameFromBGG(externalId, request.reasonForInclusion())
-            )
-            .map(createAndIncludeBoardGameFromBGGServiceResult -> new Response(createAndIncludeBoardGameFromBGGServiceResult.boardGameId(), createAndIncludeBoardGameFromBGGServiceResult.boardGameInclusionId()))
-            .fold(CreateAndIncludeBoardGameFromBGGController::errorToHttpResponse, ResponseEntity::ok);
+        try {
+
+            CreateAndIncludeBoardGameFromBGG.Output output =
+                createAndIncludeBoardGameFromBGG.execute(
+                    new CreateAndIncludeBoardGameFromBGG.Input(externalId, request.reasonForInclusion())
+                );
+
+            return ResponseEntity.ok(new Response(output.boardGameId(), output.boardGameInclusionId()));
+
+        }
+        catch (CreateAndIncludeBoardGameFromBGG.Failure failure) {
+            return exceptionToHttpResponse(failure);
+        }
 
     }
 
-    private static ResponseEntity<String> errorToHttpResponse(CreateAndIncludeBoardGameFromBGGError error) {
+    private static ResponseEntity<String> exceptionToHttpResponse(CreateAndIncludeBoardGameFromBGG.Failure failure) {
 
-        return switch (error) {
-            case UserRetrievalError userRetrievalError -> {
+        return switch (failure) {
+            case CreateAndIncludeBoardGameFromBGG.UserRetrievalException userRetrievalException -> {
                 final String userRetrievalErrorMessage =
                     "Couldn't retrieve the information associated with the current user";
 
                 yield new ResponseEntity<>(userRetrievalErrorMessage, HttpStatus.NOT_FOUND);
             }
-            case BoardGameCreationError boardGameCreationError -> {
+            case CreateAndIncludeBoardGameFromBGG.BoardGameCreationException boardGameCreationException -> {
                 final String boardGameCreationErrorMessage =
                     "An error occurred while attempting to create the board game. Please try again";
 
                 yield new ResponseEntity<>(boardGameCreationErrorMessage, HttpStatus.BAD_REQUEST);
             }
-            case BoardGameInclusionError boardGameInclusionError -> {
+            case CreateAndIncludeBoardGameFromBGG.BoardGameInclusionException boardGameInclusionException -> {
                 final String boardGameInclusionErrorMessage =
                     "An error occurred while attempting to include the board game in the user's list. Please try again";
 
                 yield new ResponseEntity<>(boardGameInclusionErrorMessage, HttpStatus.BAD_REQUEST);
             }
+
         };
 
     }

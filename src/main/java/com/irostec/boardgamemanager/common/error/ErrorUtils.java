@@ -4,7 +4,6 @@ import io.vavr.collection.Seq;
 import io.vavr.control.Validation;
 
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -22,7 +21,7 @@ public final class ErrorUtils {
         return Validation.sequence(
                 validations
                         .map(validation -> validation.mapError(io.vavr.collection.List::of))
-                        .collect(Collectors.toList())
+                        .toList()
         )
         .mapError(Seq::asJava)
         .map(Seq::asJava);

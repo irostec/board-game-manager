@@ -1,31 +1,26 @@
 package com.irostec.boardgamemanager.application.boundary.api.jpa.service;
 
-import com.google.common.collect.ImmutableMap;
-import com.irostec.boardgamemanager.application.boundary.api.jpa.entity.BoardGamePublisher;
-import com.irostec.boardgamemanager.application.boundary.api.jpa.entity.Publisher;
-import com.irostec.boardgamemanager.application.boundary.api.jpa.entity.PublisherReference;
+import com.google.common.collect.Streams;
+import com.irostec.boardgamemanager.application.boundary.api.jpa.entity.*;
 import com.irostec.boardgamemanager.application.boundary.api.jpa.repository.PublisherRepository;
 import com.irostec.boardgamemanager.application.boundary.api.jpa.repository.PublisherReferenceRepository;
 import com.irostec.boardgamemanager.application.boundary.api.jpa.repository.BoardGamePublisherRepository;
+import com.irostec.boardgamemanager.application.boundary.createandincludeboardgamefrombgg.components.EntityCollectionProcessor;
+import com.irostec.boardgamemanager.application.boundary.createandincludeboardgamefrombgg.components.filters.BoardGamePublisherCollectionFilter;
+import com.irostec.boardgamemanager.application.boundary.createandincludeboardgamefrombgg.components.filters.PublisherReferenceCollectionFilter;
 import com.irostec.boardgamemanager.application.core.shared.bggapi.output.Link;
-import com.irostec.boardgamemanager.common.utility.PartialFunctionDefinition;
-import io.vavr.control.Either;
+import com.irostec.boardgamemanager.common.error.BoundaryException;
 import lombok.AllArgsConstructor;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
-import java.util.Map;
+import java.util.Comparator;
 import java.util.function.Function;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.irostec.boardgamemanager.common.utility.Functions.orderedZipper;
-import static com.irostec.boardgamemanager.common.utility.Functions.zipper;
 import static com.irostec.boardgamemanager.common.utility.Functions.wrapWithErrorHandling;
-import static com.irostec.boardgamemanager.common.utility.Functions.processItems;
-import static com.irostec.boardgamemanager.common.utility.Functions.mapAndProcess;
 
 @Component
 @AllArgsConstructor
@@ -43,102 +38,107 @@ public class PublisherService {
     private final PublisherRepository publisherRepository;
     private final PublisherReferenceRepository publisherReferenceRepository;
     private final BoardGamePublisherRepository boardGamePublisherRepository;
+    private final BoardGamePublisherCollectionFilter boardGamePublisherCollectionFilter;
+    private final PublisherReferenceCollectionFilter publisherReferenceCollectionFilter;
+    private final EntityCollectionProcessor entityCollectionProcessor;
 
-    public <E> Either<E, Collection<BoardGamePublisher>> saveBoardGamePublishers(
-        long boardGameId,
+    private Collection<PublisherReference> savePublisherReferences(
         Long dataSourceId,
-        Supplier<Collection<Link>> linksSupplier,
-        Function<Link, String> linkToKey,
-        Function<Throwable, E> exceptionToError
-    ) {
+        Collection<Link> links
+    ) throws BoundaryException {
 
-        Either<E, PartialFunctionDefinition<Link, ImmutablePair<Publisher, PublisherReference>>> partialFunctionDefinitionContainer =
-            PartialFunctionDefinition.of(
-                linksSupplier.get(),
-                links -> wrapWithErrorHandling(
-                    () -> publisherRepository.findByDataSourceIdAndExternalIdIn(
-                        dataSourceId,
-                        links.stream().map(linkToKey).collect(Collectors.toList())
-                    ),
-                    exceptionToError
-                ),
-                linkToKey,
-                pairOfBoardGameAndBoardGameReference -> pairOfBoardGameAndBoardGameReference.getRight().getExternalId()
+        EntityCollectionProcessor.PartialFunctionDefinition<Link, PublisherReference> partialFunctionDefinition =
+            entityCollectionProcessor.buildPartialFunctionDefinition(
+                links,
+                dataSourceId,
+                publisherReferenceCollectionFilter,
+                Link::id,
+                PublisherReference::getExternalId
             );
 
-        Either<E, Map<Boolean, Collection<ImmutablePair<Link, Publisher>>>> publishersByStatusContainer =
-            partialFunctionDefinitionContainer.flatMap(partialFunctionDefinition ->
-                processItems(
-                    partialFunctionDefinition,
-                    newInputs -> mapAndProcess(
-                        newInputs,
-                        LINK_TO_PUBLISHER,
-                        publisherRepository::saveAll,
-                        exceptionToError
-                    ),
-                    Either::right,
-                    zipper(ImmutablePair::of),
-                    orderedZipper(
-                        linkToKey,
-                        pairOfBoardGameAndBoardGameReference -> pairOfBoardGameAndBoardGameReference.getRight().getExternalId(),
-                        Function.identity(),
-                        ImmutablePair::getLeft,
-                        ImmutablePair::of
-                    ),
-                    (newItems, existingItems) -> ImmutableMap.of(true, newItems, false, existingItems)
+        Collection<Publisher> newPublishers = wrapWithErrorHandling(() ->
+            publisherRepository.saveAll(
+                partialFunctionDefinition.getUnmappedDomain().stream()
+                    .map(LINK_TO_PUBLISHER)
+                    .toList()
+            )
+        );
+
+        Collection<ImmutablePair<Link, Publisher>> newLinksWithPublishers =
+            Streams.zip(
+                links.stream().sorted(Comparator.comparing(Link::value)),
+                newPublishers.stream().sorted(Comparator.comparing(Publisher::getName)),
+                ImmutablePair::of
+            )
+            .toList();
+
+        Collection<PublisherReference> newPublisherReferences = wrapWithErrorHandling(() ->
+            publisherReferenceRepository.saveAll(
+                newLinksWithPublishers.stream().map(
+                    linkWithPublisher -> {
+
+                        PublisherReference publisherReference = new PublisherReference();
+                        publisherReference.setDataSourceId(dataSourceId);
+                        publisherReference.setPublisherId(linkWithPublisher.getRight().getId());
+                        publisherReference.setExternalId(linkWithPublisher.getLeft().id());
+
+                        return publisherReference;
+                    }
                 )
+                .toList()
+            )
+        );
+
+        Collection<PublisherReference> existingPublisherReferences = partialFunctionDefinition.getImage();
+
+        return Stream.concat(newPublisherReferences.stream(), existingPublisherReferences.stream()).toList();
+
+    }
+
+    private Collection<BoardGamePublisher> saveBoardGamePublishers(
+        long boardGameId,
+        Collection<PublisherReference> publisherReferences
+    ) throws BoundaryException {
+
+        EntityCollectionProcessor.PartialFunctionDefinition<PublisherReference, BoardGamePublisher> partialFunctionDefinition =
+            entityCollectionProcessor.buildPartialFunctionDefinition(
+                publisherReferences, boardGameId, boardGamePublisherCollectionFilter, PublisherReference::getPublisherId, BoardGamePublisher::getPublisherId
             );
 
-        Either<E, Collection<PublisherReference>> publisherReferencesContainer =
-            publishersByStatusContainer.flatMap(publishersByStatus ->
-                processItems(
-                    publishersByStatus,
-                    newInputs -> mapAndProcess(
-                        newInputs,
-                        linkAndPublisher -> {
+        Collection<BoardGamePublisher> newBoardGamePublishers = wrapWithErrorHandling(() ->
+            boardGamePublisherRepository.saveAll(
+                partialFunctionDefinition.getUnmappedDomain().stream()
+                    .map(
+                        publisherReference -> {
 
-                            PublisherReference publisherReference = new PublisherReference();
-                            publisherReference.setDataSourceId(dataSourceId);
-                            publisherReference.setPublisherId(linkAndPublisher.getRight().getId());
-                            publisherReference.setExternalId(linkAndPublisher.getLeft().id());
+                            BoardGamePublisher boardGamePublisher = new BoardGamePublisher();
+                            boardGamePublisher.setBoardGameId(boardGameId);
+                            boardGamePublisher.setPublisherId(publisherReference.getPublisherId());
 
-                            return publisherReference;
-                        },
-                        publisherReferenceRepository::saveAll,
-                        exceptionToError
-                    ),
-                    existingInputs -> mapAndProcess(
-                        existingInputs,
-                        linkAndPublisher -> linkAndPublisher.getLeft().id(),
-                        externalIds ->
-                            publisherReferenceRepository.findByDataSourceIdAndExternalIdIn(dataSourceId, externalIds)
-                                .collect(Collectors.toList()),
-                        exceptionToError
-                    ),
-                    (newItems, existingItems) ->
-                        Stream.concat(newItems.stream(), existingItems.stream()).collect(Collectors.toList())
-                )
-            );
+                            return boardGamePublisher;
 
-        Either<E, Collection<BoardGamePublisher>> boardGamePublishersContainer =
-            publisherReferencesContainer.flatMap(publisherReferences ->
-                mapAndProcess(
-                    publisherReferences,
-                    publisherReference -> {
+                        }
+                    )
+                    .toList()
+            )
+        );
 
-                        BoardGamePublisher boardGamePublisher = new BoardGamePublisher();
-                        boardGamePublisher.setBoardGameId(boardGameId);
-                        boardGamePublisher.setPublisherId(publisherReference.getPublisherId());
+        Collection<BoardGamePublisher> existingBoardGamePublishers = partialFunctionDefinition.getImage();
 
-                        return boardGamePublisher;
+        return Stream.concat(newBoardGamePublishers.stream(), existingBoardGamePublishers.stream()).toList();
 
-                    },
-                    boardGamePublisherRepository::saveAll,
-                    exceptionToError
-                )
-            );
+    }
 
-        return boardGamePublishersContainer;
+    @Transactional(rollbackFor = Throwable.class)
+    public Collection<BoardGamePublisher> saveBoardGamePublishers(
+        long boardGameId,
+        long dataSourceId,
+        Collection<Link> links
+    ) throws BoundaryException {
+
+        Collection<PublisherReference> publisherReferences = savePublisherReferences(dataSourceId, links);
+
+        return saveBoardGamePublishers(boardGameId, publisherReferences);
 
     }
 

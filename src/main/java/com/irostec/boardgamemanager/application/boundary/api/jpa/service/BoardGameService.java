@@ -1,35 +1,29 @@
 package com.irostec.boardgamemanager.application.boundary.api.jpa.service;
 
-import com.irostec.boardgamemanager.application.boundary.api.jpa.entity.BoardGame;
-import com.irostec.boardgamemanager.application.boundary.api.jpa.entity.BoardGameFixedData;
-import com.irostec.boardgamemanager.application.boundary.api.jpa.entity.BoardGameReference;
+import com.google.common.collect.Streams;
+import com.irostec.boardgamemanager.application.boundary.api.jpa.entity.*;
 import com.irostec.boardgamemanager.application.boundary.api.jpa.repository.BoardGameReferenceRepository;
 import com.irostec.boardgamemanager.application.boundary.api.jpa.repository.BoardGameRepository;
 import com.irostec.boardgamemanager.application.boundary.api.jpa.repository.BoardGameFixedDataRepository;
 
+import com.irostec.boardgamemanager.application.boundary.createandincludeboardgamefrombgg.components.EntityCollectionProcessor;
+import com.irostec.boardgamemanager.application.boundary.createandincludeboardgamefrombgg.components.filters.BoardGameReferenceCollectionFilter;
 import com.irostec.boardgamemanager.application.core.shared.bggapi.output.BoardGameFromBGG;
 import com.irostec.boardgamemanager.application.core.shared.bggapi.output.Link;
 import com.irostec.boardgamemanager.application.core.shared.bggapi.output.Name;
 import com.irostec.boardgamemanager.application.core.shared.bggapi.output.NameType;
-import com.irostec.boardgamemanager.common.utility.PartialFunctionDefinition;
+import com.irostec.boardgamemanager.common.error.BoundaryException;
 
-import io.vavr.control.Either;
 import lombok.AllArgsConstructor;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
-import java.util.Map;
-import java.util.Optional;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+import java.util.Comparator;
 import java.util.stream.Stream;
 
 import static com.irostec.boardgamemanager.common.utility.Functions.wrapWithErrorHandling;
-import static com.irostec.boardgamemanager.common.utility.Functions.mapAndProcess;
-import static com.irostec.boardgamemanager.common.utility.Functions.processItems;
-import static com.irostec.boardgamemanager.common.utility.Functions.orderedZipper;
-import static com.irostec.boardgamemanager.common.utility.Functions.zipper;
 
 @Component
 @AllArgsConstructor
@@ -38,211 +32,116 @@ public class BoardGameService {
     private final BoardGameRepository boardGameRepository;
     private final BoardGameReferenceRepository boardGameReferenceRepository;
     private final BoardGameFixedDataRepository boardGameFixedDataRepository;
+    private final BoardGameReferenceCollectionFilter boardGameReferenceCollectionFilter;
+    private final EntityCollectionProcessor entityCollectionProcessor;
 
-    public <E> Either<E, BoardGameFixedData> saveBoardGameFixedData(
+    @Transactional(rollbackFor = Throwable.class)
+    public BoardGameFixedData saveBoardGameFixedData(
         Long boardGameId,
-        BoardGameFromBGG boardGameFromBGG,
-        Function<Throwable, E> exceptionToError
-    ) {
+        BoardGameFromBGG boardGameFromBGG
+    ) throws BoundaryException {
 
-        return wrapWithErrorHandling(
-            () -> {
+        BoardGameFixedData boardGameFixedData =
+            wrapWithErrorHandling(() -> boardGameFixedDataRepository.findByBoardGameId(boardGameId))
+                .orElseGet(BoardGameFixedData::new);
 
-                BoardGameFixedData boardGameFixedData = new BoardGameFixedData();
-                boardGameFixedData.setBoardGameId(boardGameId);
-                boardGameFixedData.setYearOfPublication(boardGameFromBGG.yearPublished());
-                boardGameFixedData.setMinimumAge(boardGameFromBGG.minAge().getValue());
-                boardGameFixedData.setMinimumPlayers(boardGameFromBGG.players().getMinimum().getValue());
-                boardGameFixedData.setMaximumPlayers(boardGameFromBGG.players().getMaximum().getValue());
-                boardGameFixedData.setAveragePlaytimeInMinutes(boardGameFromBGG.playtime().getAverage().getValue());
-                boardGameFixedData.setMinimumPlaytimeInMinutes(boardGameFromBGG.playtime().getMinimum().getValue());
-                boardGameFixedData.setMaximumPlaytimeInMinutes(boardGameFromBGG.playtime().getMaximum().getValue());
+        boardGameFixedData.setBoardGameId(boardGameId);
+        boardGameFixedData.setYearOfPublication(boardGameFromBGG.yearPublished());
+        boardGameFixedData.setMinimumAge(boardGameFromBGG.minAge().getValue());
+        boardGameFixedData.setMinimumPlayers(boardGameFromBGG.players().getMinimum().getValue());
+        boardGameFixedData.setMaximumPlayers(boardGameFromBGG.players().getMaximum().getValue());
+        boardGameFixedData.setAveragePlaytimeInMinutes(boardGameFromBGG.playtime().getAverage().getValue());
+        boardGameFixedData.setMinimumPlaytimeInMinutes(boardGameFromBGG.playtime().getMinimum().getValue());
+        boardGameFixedData.setMaximumPlaytimeInMinutes(boardGameFromBGG.playtime().getMaximum().getValue());
 
-                return boardGameFixedDataRepository.save(boardGameFixedData);
-
-            },
-            exceptionToError
-        );
+        return wrapWithErrorHandling(() -> boardGameFixedDataRepository.saveAndFlush(boardGameFixedData));
 
     }
 
-    public <E> Either<E, ImmutablePair<BoardGame, BoardGameReference>> saveBoardGame(
+    @Transactional(rollbackFor = Throwable.class)
+    public ImmutablePair<BoardGame, BoardGameReference> saveBoardGame(
         Long dataSourceId,
-        BoardGameFromBGG boardGameFromBGG,
-        Function<Throwable, E> exceptionToError
-    ) {
+        BoardGameFromBGG boardGameFromBGG
+    ) throws BoundaryException {
 
-        Either<E, Optional<ImmutablePair<BoardGame, BoardGameReference>>> optionalBoardGameWithReferenceContainer =
-            wrapWithErrorHandling(
-                () -> boardGameRepository.findByDataSourceIdAndExternalId(dataSourceId, boardGameFromBGG.id()),
-                exceptionToError
+        ImmutablePair<BoardGame, BoardGameReference> boardGameWithReference =
+        wrapWithErrorHandling(() -> boardGameRepository.findByDataSourceIdAndExternalId(dataSourceId, boardGameFromBGG.id()))
+                .orElseGet(() -> new ImmutablePair<>(new BoardGame(), new BoardGameReference()));
+
+        BoardGame previousBoardGame = boardGameWithReference.getLeft();
+        BoardGameService.combine(previousBoardGame, boardGameFromBGG);
+        BoardGame updatedBoardGame =
+            wrapWithErrorHandling(() -> boardGameRepository.saveAndFlush(previousBoardGame));
+
+        BoardGameReference previousBoardGameReference = boardGameWithReference.getRight();
+        BoardGameService.combine(previousBoardGameReference, updatedBoardGame.getId(), dataSourceId, boardGameFromBGG);
+        BoardGameReference updateBoardGameReference =
+            wrapWithErrorHandling(() -> boardGameReferenceRepository.saveAndFlush(previousBoardGameReference));
+
+        return new ImmutablePair<>(updatedBoardGame, updateBoardGameReference);
+
+    }
+
+    public Collection<BoardGameReference> saveBoardGameReferences(
+        Long dataSourceId,
+        Collection<Link> links
+    ) throws BoundaryException {
+
+        EntityCollectionProcessor.PartialFunctionDefinition<Link, BoardGameReference> partialFunctionDefinition =
+            entityCollectionProcessor.buildPartialFunctionDefinition(
+                links,
+                dataSourceId,
+                boardGameReferenceCollectionFilter,
+                Link::id,
+                BoardGameReference::getExternalId
             );
 
-        Either<E, ImmutablePair<BoardGame, BoardGameReference>> boardGameWithReferenceContainer =
-            optionalBoardGameWithReferenceContainer.flatMap(
-                optionalBoardGameWithReference -> optionalBoardGameWithReference
-                    .map(boardGameWithReference -> {
+        Collection<BoardGame> newBoardGames = wrapWithErrorHandling(() ->
+            boardGameRepository.saveAll(
+                partialFunctionDefinition.getUnmappedDomain().stream()
+                    .map(
+                        link -> {
 
-                        BoardGame oldBoardGame = boardGameWithReference.getLeft();
-                        BoardGameReference boardGameReference = boardGameWithReference.getRight();
+                            BoardGame boardGame = new BoardGame();
+                            boardGame.setName(link.value());
 
-                        return updateBoardGame(oldBoardGame, boardGameFromBGG, exceptionToError)
-                        .map(updatedBoardGame -> new ImmutablePair<>(updatedBoardGame, boardGameReference));
+                            return boardGame;
 
-                    })
-                    .orElseGet(() ->
-                        createBoardGame(boardGameFromBGG, exceptionToError)
-                        .flatMap(newBoardGame ->
-                            createBoardGameReference(
-                                newBoardGame.getId(),
-                                dataSourceId,
-                                boardGameFromBGG,
-                                exceptionToError
-                            )
-                            .map(boardGameReference -> new ImmutablePair<>(newBoardGame, boardGameReference))
-                        )
+                        }
                     )
-            );
-
-        return boardGameWithReferenceContainer;
-
-    }
-
-    private <E> Either<E, BoardGameReference> createBoardGameReference(
-        Long boardGameId,
-        Long dataSourceId,
-        BoardGameFromBGG boardGameFromBGG,
-        Function<Throwable, E> exceptionToError
-    ) {
-
-        BoardGameReference boardGameReference = new BoardGameReference();
-        boardGameReference.setBoardGameId(boardGameId);
-        boardGameReference.setDataSourceId(dataSourceId);
-        boardGameReference.setExternalId(boardGameFromBGG.id());
-
-        return wrapWithErrorHandling(
-            () -> boardGameReferenceRepository.save(boardGameReference),
-            exceptionToError
+                    .toList()
+            )
         );
 
-    }
+        Collection<ImmutablePair<Link, BoardGame>> newLinksWithBoardGames =
+            Streams.zip(
+                links.stream().sorted(Comparator.comparing(Link::value)),
+                newBoardGames.stream().sorted(Comparator.comparing(BoardGame::getName)),
+                ImmutablePair::of
+            )
+            .toList();
 
-    private <E> Either<E, BoardGame> createBoardGame(
-        BoardGameFromBGG boardGameFromBGG,
-        Function<Throwable, E> exceptionToError
-    ) {
+        Collection<BoardGameReference> newBoardGameReferences = wrapWithErrorHandling(() ->
+            boardGameReferenceRepository.saveAll(
+                newLinksWithBoardGames.stream().map(
+                    linkWithBoardGame -> {
 
-        BoardGame boardGame = new BoardGame();
-        BoardGameService.combine(boardGame, boardGameFromBGG);
+                        BoardGameReference boardGameReference = new BoardGameReference();
+                        boardGameReference.setDataSourceId(dataSourceId);
+                        boardGameReference.setBoardGameId(linkWithBoardGame.getRight().getId());
+                        boardGameReference.setExternalId(linkWithBoardGame.getLeft().id());
+                        boardGameReference.setAverageRating(null);
 
-        return wrapWithErrorHandling(
-            () -> boardGameRepository.save(boardGame),
-            exceptionToError
-        );
-
-    }
-
-    private <E> Either<E, BoardGame> updateBoardGame(
-        BoardGame boardGame,
-        BoardGameFromBGG boardGameFromBGG,
-        Function<Throwable, E> exceptionToError
-    ) {
-
-        BoardGameService.combine(boardGame, boardGameFromBGG);
-
-        return wrapWithErrorHandling(
-            () -> boardGameRepository.save(boardGame),
-            exceptionToError
-        );
-
-    }
-
-    public <E> Either<E, Collection<BoardGameReference>> saveBoardGameReferences(
-        Long dataSourceId,
-        Collection<Link> inputs,
-        Function<Link, String> linkToKey,
-        Function<Throwable, E> exceptionToError
-    ) {
-
-        Either<E, PartialFunctionDefinition<Link, ImmutablePair<BoardGame, BoardGameReference>>> partialFunctionDefinitionContainer =
-            PartialFunctionDefinition.of(
-                inputs,
-                links -> wrapWithErrorHandling(
-                    () -> boardGameRepository.findByDataSourceIdAndExternalIdIn(
-                        dataSourceId,
-                        links.stream().map(linkToKey).collect(Collectors.toList())
-                    ),
-                    exceptionToError
-                ),
-                linkToKey,
-                pairOfBoardGameAndBoardGameReference -> pairOfBoardGameAndBoardGameReference.getRight().getExternalId()
-            );
-
-        Either<E, Map<Boolean, Collection<ImmutablePair<Link, BoardGame>>>> boardGamesByStatusContainer =
-            partialFunctionDefinitionContainer.flatMap(partialFunctionDefinition ->
-                processItems(
-                    partialFunctionDefinition,
-                    newInputs -> mapAndProcess(
-                        newInputs,
-                        BoardGameService::linkToBoardGame,
-                        boardGameRepository::saveAll,
-                        exceptionToError
-                    ),
-                    Either::right,
-                    zipper(ImmutablePair::of),
-                    orderedZipper(
-                        linkToKey,
-                        pairOfBoardGameAndBoardGameReference -> pairOfBoardGameAndBoardGameReference.getRight().getExternalId(),
-                        Function.identity(),
-                        ImmutablePair::getLeft,
-                        ImmutablePair::of
-                    ),
-                    (newItems, existingItems) -> Map.of(true, newItems, false, existingItems)
+                        return boardGameReference;
+                    }
                 )
-            );
+                .toList()
+            )
+        );
 
-        Either<E, Collection<BoardGameReference>> boardGameReferencesContainer =
-            boardGamesByStatusContainer.flatMap(boardGamesByStatus ->
-                processItems(
-                    boardGamesByStatus,
-                    newInputs -> mapAndProcess(
-                        newInputs,
-                        linkAndBoardGame -> {
+        Collection<BoardGameReference> existingBoardGameReferences = partialFunctionDefinition.getImage();
 
-                            BoardGameReference boardGameReference = new BoardGameReference();
-                            boardGameReference.setDataSourceId(dataSourceId);
-                            boardGameReference.setBoardGameId(linkAndBoardGame.getRight().getId());
-                            boardGameReference.setExternalId(linkAndBoardGame.getLeft().id());
-                            boardGameReference.setAverageRating(null);
-
-                            return boardGameReference;
-                        },
-                        boardGameReferenceRepository::saveAll,
-                        exceptionToError
-                    ),
-                    existingInputs -> mapAndProcess(
-                        existingInputs,
-                        linkAndBoardGame -> linkAndBoardGame.getLeft().id(),
-                        externalIds ->
-                            boardGameReferenceRepository.findByDataSourceIdAndExternalIdIn(dataSourceId, externalIds)
-                                .collect(Collectors.toList()),
-                        exceptionToError
-                    ),
-                    (newItems, existingItems) ->
-                        Stream.concat(newItems.stream(), existingItems.stream()).collect(Collectors.toList())
-                )
-            );
-
-        return boardGameReferencesContainer;
-
-    }
-
-    private static BoardGame linkToBoardGame(Link link) {
-
-        BoardGame boardGame = new BoardGame();
-        boardGame.setName(link.value());
-
-        return boardGame;
+        return Stream.concat(newBoardGameReferences.stream(), existingBoardGameReferences.stream()).toList();
 
     }
 
@@ -259,30 +158,16 @@ public class BoardGameService {
 
     }
 
-
-
-
-
-
-    public <E> Either<E, Collection<BoardGame>> getAllBoardGames(
-        Function<Throwable, E> exceptionToError
+    private static void combine(
+        BoardGameReference boardGameReference,
+        long boardGameId,
+        long dataSourceId,
+        BoardGameFromBGG boardGameFromBGG
     ) {
 
-        return wrapWithErrorHandling(
-            boardGameRepository::findAll,
-            exceptionToError
-        );
-
-    }
-
-    public <E> Either<E, Collection<BoardGameReference>> getAllBoardGameReferences(
-        Function<Throwable, E> exceptionToError
-    ) {
-
-        return wrapWithErrorHandling(
-            boardGameReferenceRepository::findAll,
-            exceptionToError
-        );
+        boardGameReference.setBoardGameId(boardGameId);
+        boardGameReference.setDataSourceId(dataSourceId);
+        boardGameReference.setExternalId(boardGameFromBGG.id());
 
     }
 

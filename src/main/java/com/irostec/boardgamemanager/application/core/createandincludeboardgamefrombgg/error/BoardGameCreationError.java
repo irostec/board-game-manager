@@ -1,6 +1,0 @@
-package com.irostec.boardgamemanager.application.core.createandincludeboardgamefrombgg.error;
-
-import com.irostec.boardgamemanager.application.core.shared.createboardgamefrombgg.error.CreateBoardGameFromBGGError;
-
-public record BoardGameCreationError(CreateBoardGameFromBGGError source) implements CreateAndIncludeBoardGameFromBGGError {
-}

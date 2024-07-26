@@ -266,6 +266,14 @@ databaseChangeLog:
             referencedTableName: board_game
             referencedTableSchemaName: public
             validate: true
+        - addUniqueConstraint:
+            catalogName: board_game_manager
+            columnNames: board_game_id
+            constraintName: board_game_fixed_data_chk1
+            indexName: board_game_fixed_data_idx1
+            schemaName: public
+            tableName: board_game_fixed_data
+            validate: true
 
         - createTable:
             catalogName: board_game_manager

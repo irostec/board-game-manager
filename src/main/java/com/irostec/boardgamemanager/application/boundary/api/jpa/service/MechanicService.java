@@ -4,22 +4,19 @@ import com.irostec.boardgamemanager.application.boundary.api.jpa.entity.BoardGam
 import com.irostec.boardgamemanager.application.boundary.api.jpa.entity.Mechanic;
 import com.irostec.boardgamemanager.application.boundary.api.jpa.repository.BoardGameMechanicRepository;
 import com.irostec.boardgamemanager.application.boundary.api.jpa.repository.MechanicRepository;
+import com.irostec.boardgamemanager.application.boundary.createandincludeboardgamefrombgg.components.EntityCollectionProcessor;
+import com.irostec.boardgamemanager.application.boundary.createandincludeboardgamefrombgg.components.filters.BoardGameMechanicCollectionFilter;
+import com.irostec.boardgamemanager.application.boundary.createandincludeboardgamefrombgg.components.filters.MechanicCollectionFilter;
 import com.irostec.boardgamemanager.application.core.shared.bggapi.output.Link;
-import com.irostec.boardgamemanager.common.utility.PartialFunctionDefinition;
-import io.vavr.control.Either;
+import com.irostec.boardgamemanager.common.error.BoundaryException;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
-import java.util.function.Function;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.irostec.boardgamemanager.common.utility.Functions.zipper;
 import static com.irostec.boardgamemanager.common.utility.Functions.wrapWithErrorHandling;
-import static com.irostec.boardgamemanager.common.utility.Functions.processItems;
-import static com.irostec.boardgamemanager.common.utility.Functions.mapAndProcess;
 
 @Component
 @AllArgsConstructor
@@ -27,35 +24,23 @@ public class MechanicService {
 
     private final MechanicRepository mechanicRepository;
     private final BoardGameMechanicRepository boardGameMechanicRepository;
+    private final BoardGameMechanicCollectionFilter boardGameMechanicCollectionFilter;
+    private final MechanicCollectionFilter mechanicCollectionFilter;
 
-    public <E> Either<E, Collection<BoardGameMechanic>> saveMechanics(
-        Long boardGameId,
-        Long dataSourceId,
-        Supplier<Collection<Link>> linksSupplier,
-        Function<Link, String> linkToKey,
-        Function<Throwable, E> exceptionToError
-    ) {
+    private final EntityCollectionProcessor entityCollectionProcessor;
 
-        Either<E, PartialFunctionDefinition<Link, Mechanic>> partialFunctionDefinitionContainer =
-            PartialFunctionDefinition.of(
-                linksSupplier.get(),
-                links -> wrapWithErrorHandling(
-                    () -> mechanicRepository.findByDataSourceIdAndExternalIdIn(
-                        dataSourceId,
-                        links.stream().map(linkToKey).collect(Collectors.toList())
-                    ),
-                    exceptionToError
-                ),
-                linkToKey,
-                Mechanic::getExternalId
+    private Collection<Mechanic> saveMechanics(Long dataSourceId, Collection<Link> links)
+    throws BoundaryException {
+
+        EntityCollectionProcessor.PartialFunctionDefinition<Link, Mechanic> partialFunctionDefinition =
+            entityCollectionProcessor.buildPartialFunctionDefinition(
+                links, dataSourceId, mechanicCollectionFilter, Link::id, Mechanic::getExternalId
             );
 
-        Either<E, Collection<Mechanic>> mechanicsContainer =
-            partialFunctionDefinitionContainer.flatMap(partialFunctionDefinition ->
-                processItems(
-                    partialFunctionDefinition,
-                    newInputs -> mapAndProcess(
-                        newInputs,
+        Collection<Mechanic> newMechanics = wrapWithErrorHandling(() ->
+            mechanicRepository.saveAll(
+                partialFunctionDefinition.getUnmappedDomain().stream()
+                    .map(
                         link -> {
 
                             Mechanic mechanic = new Mechanic();
@@ -65,37 +50,61 @@ public class MechanicService {
 
                             return mechanic;
 
-                        },
-                        mechanicRepository::saveAll,
-                        exceptionToError
-                    ),
-                    Either::right,
-                    zipper((newInputs, newItems) -> newItems),
-                    zipper((existingInputs, existingItems) -> existingItems),
-                    (newItems, existingItems) ->
-                        Stream.concat(newItems.stream(), existingItems.stream()).collect(Collectors.toList())
-                )
+                        }
+                    )
+                    .toList()
+            )
+        );
+
+        Collection<Mechanic> existingMechanics = partialFunctionDefinition.getImage();
+
+        return Stream.concat(newMechanics.stream(), existingMechanics.stream()).toList();
+
+    }
+
+    private Collection<BoardGameMechanic> createBoardGameMechanics(Long boardGameId, Collection<Mechanic> mechanics)
+    throws BoundaryException {
+
+        EntityCollectionProcessor.PartialFunctionDefinition<Mechanic, BoardGameMechanic> partialFunctionDefinition =
+            entityCollectionProcessor.buildPartialFunctionDefinition(
+                mechanics, boardGameId, boardGameMechanicCollectionFilter, Mechanic::getId, BoardGameMechanic::getMechanicId
             );
 
-        Either<E, Collection<BoardGameMechanic>> boardGameMechanicsContainer =
-            mechanicsContainer.flatMap(
-                mechanics -> mapAndProcess(
-                    mechanics,
-                    mechanic -> {
+        Collection<BoardGameMechanic> newBoardGameMechanics = wrapWithErrorHandling(() ->
+            boardGameMechanicRepository.saveAll(
+                partialFunctionDefinition.getUnmappedDomain().stream()
+                    .map(
+                        mechanic -> {
 
-                        BoardGameMechanic boardGameMechanic = new BoardGameMechanic();
-                        boardGameMechanic.setBoardGameId(boardGameId);
-                        boardGameMechanic.setMechanicId(mechanic.getId());
+                            BoardGameMechanic boardGameMechanic = new BoardGameMechanic();
+                            boardGameMechanic.setBoardGameId(boardGameId);
+                            boardGameMechanic.setMechanicId(mechanic.getId());
 
-                        return boardGameMechanic;
+                            return boardGameMechanic;
 
-                    },
-                    boardGameMechanicRepository::saveAll,
-                        exceptionToError
-                )
-            );
+                        }
+                    )
+                    .toList()
+            )
+        );
 
-        return boardGameMechanicsContainer;
+        Collection<BoardGameMechanic> existingBoardGameMechanics = partialFunctionDefinition.getImage();
+
+        return Stream.concat(newBoardGameMechanics.stream(), existingBoardGameMechanics.stream()).toList();
+
+    }
+
+    @Transactional(rollbackFor = Throwable.class)
+    public Collection<BoardGameMechanic> saveBoardGameMechanics(
+        Long boardGameId,
+        Long dataSourceId,
+        Collection<Link> links
+    )
+    throws BoundaryException {
+
+        Collection<Mechanic> mechanics = this.saveMechanics(dataSourceId, links);
+
+        return createBoardGameMechanics(boardGameId, mechanics);
 
     }
 

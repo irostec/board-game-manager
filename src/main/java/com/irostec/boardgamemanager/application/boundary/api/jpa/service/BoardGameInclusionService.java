@@ -4,13 +4,11 @@ import com.irostec.boardgamemanager.application.boundary.api.jpa.entity.BoardGam
 import com.irostec.boardgamemanager.application.boundary.api.jpa.entity.BoardGameInclusionDetail;
 import com.irostec.boardgamemanager.application.boundary.api.jpa.repository.BoardGameInclusionDetailRepository;
 import com.irostec.boardgamemanager.application.boundary.api.jpa.repository.BoardGameInclusionRepository;
-import io.vavr.control.Either;
+import com.irostec.boardgamemanager.common.error.BoundaryException;
 import lombok.AllArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Component;
-
-import java.util.function.Function;
 
 import static com.irostec.boardgamemanager.common.utility.Functions.wrapWithErrorHandling;
 
@@ -23,64 +21,51 @@ public class BoardGameInclusionService {
     private final BoardGameInclusionRepository boardGameInclusionRepository;
     private final BoardGameInclusionDetailRepository boardGameInclusionDetailRepository;
 
-    public <E> Either<E, BoardGameInclusionDetail> includeBoardGame(
+    public BoardGameInclusionDetail includeBoardGame(
         long boardGameUserId,
         long boardGameId,
-        String reason,
-        Function<Throwable, E> exceptionToError
-    ) {
+        String reason
+    ) throws BoundaryException {
 
         final String inputDescription = String.format("for board game user id '%d' and board game id '%d' and reason '%s'", boardGameUserId, boardGameId, reason);
-
         logger.info("Creating single board game inclusion " + inputDescription);
 
-        Either<E, BoardGameInclusionDetail> result = createBoardGameInclusion(reason, exceptionToError)
-            .map(BoardGameInclusion::getId)
-            .flatMap(boardGameInclusionId -> createBoardGameInclusionDetail(boardGameUserId, boardGameId, boardGameInclusionId, exceptionToError));
+        BoardGameInclusion boardGameInclusion = createBoardGameInclusion(reason);
+        BoardGameInclusionDetail boardGameInclusionDetail =
+            createBoardGameInclusionDetail(boardGameUserId, boardGameId, boardGameInclusion.getId());
 
-        result
-            .peek(boardGameInclusionDetail -> logger.info("Successfully created single board game inclusion " + inputDescription))
-            .peekLeft(error -> logger.info("Error creating board game inclusion " + inputDescription));
+        logger.info("Successfully created single board game inclusion " + inputDescription);
 
-        return result;
+        return boardGameInclusionDetail;
 
     }
 
-    private <E> Either<E, BoardGameInclusion> createBoardGameInclusion(
-        String reason,
-        Function<Throwable, E> exceptionToError
-    ) {
+    private BoardGameInclusion createBoardGameInclusion(
+        String reason
+    ) throws BoundaryException {
+
+        BoardGameInclusion boardGameInclusion = new BoardGameInclusion();
+        boardGameInclusion.setReason(reason);
 
         return wrapWithErrorHandling(
-            () -> {
-                BoardGameInclusion boardGameInclusion = new BoardGameInclusion();
-                boardGameInclusion.setReason(reason);
-
-                return boardGameInclusionRepository.save(boardGameInclusion);
-            },
-            exceptionToError
+            () -> boardGameInclusionRepository.save(boardGameInclusion)
         );
 
     }
 
-    private <E> Either<E, BoardGameInclusionDetail> createBoardGameInclusionDetail(
+    private BoardGameInclusionDetail createBoardGameInclusionDetail(
         long boardGameUserId,
         long boardGameId,
-        long boardGameInclusionId,
-        Function<Throwable, E> exceptionToError
-    ) {
+        long boardGameInclusionId
+    ) throws BoundaryException {
+
+        BoardGameInclusionDetail boardGameInclusionDetail = new BoardGameInclusionDetail();
+        boardGameInclusionDetail.setBoardGameUserId(boardGameUserId);
+        boardGameInclusionDetail.setBoardGameId(boardGameId);
+        boardGameInclusionDetail.setBoardGameInclusionId(boardGameInclusionId);
 
         return wrapWithErrorHandling(
-            () -> {
-
-                BoardGameInclusionDetail boardGameInclusionDetail = new BoardGameInclusionDetail();
-                boardGameInclusionDetail.setBoardGameUserId(boardGameUserId);
-                boardGameInclusionDetail.setBoardGameId(boardGameId);
-                boardGameInclusionDetail.setBoardGameInclusionId(boardGameInclusionId);
-
-                return boardGameInclusionDetailRepository.save(boardGameInclusionDetail);
-            },
-            exceptionToError
+            () -> boardGameInclusionDetailRepository.save(boardGameInclusionDetail)
         );
 
     }

@@ -8,28 +8,28 @@ import com.irostec.boardgamemanager.application.core.shared.bggapi.output.Link;
 import com.irostec.boardgamemanager.application.core.shared.bggapi.output.LinkType;
 
 import com.irostec.boardgamemanager.application.core.shared.createboardgamefrombgg.dependency.SaveBGGBoardGameFixedData;
-import com.irostec.boardgamemanager.application.core.shared.createboardgamefrombgg.error.CreateBoardGameFromBGGError;
+import com.irostec.boardgamemanager.application.core.shared.createboardgamefrombgg.error.CreateBoardGameFromBGGException;
+import com.irostec.boardgamemanager.application.core.shared.createboardgamefrombgg.error.MissingPropertyException;
 import com.irostec.boardgamemanager.application.core.shared.createboardgamefrombgg.output.BoardGameSummary;
 import com.irostec.boardgamemanager.application.core.shared.bggapi.output.BoardGameFromBGG;
-import com.irostec.boardgamemanager.application.core.shared.createboardgamefrombgg.error.DatabaseError;
+import com.irostec.boardgamemanager.application.core.shared.createboardgamefrombgg.error.BoundaryException;
 
-import io.vavr.control.Either;
+import com.irostec.boardgamemanager.common.error.BGMException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import lombok.AllArgsConstructor;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Component;
 
 @Component
+@AllArgsConstructor
 final class SaveBGGBoardGameFixedDataInJPA implements SaveBGGBoardGameFixedData {
-
-    private static final Function<Link, String> LINK_TO_KEY = Link::id;
-    private static final Function<Throwable, CreateBoardGameFromBGGError> EXCEPTION_TO_ERROR = DatabaseError::new;
 
     private final Logger logger = LogManager.getLogger(SaveBGGBoardGameFixedDataInJPA.class);
 
@@ -47,228 +47,150 @@ final class SaveBGGBoardGameFixedDataInJPA implements SaveBGGBoardGameFixedData 
     private final IntegrationService integrationService;
     private final ImplementationService implementationService;
 
-    SaveBGGBoardGameFixedDataInJPA(
-        DataSourceService dataSourceService,
-        BoardGameService boardGameService,
-        ImageService imageService,
-        CategoryService categoryService,
-        MechanicService mechanicService,
-        FamilyService familyService,
-        ExpansionService expansionService,
-        DesignerService designerService,
-        ArtistService artistService,
-        PublisherService publisherService,
-        AccessoryService accessoryService,
-        IntegrationService integrationService,
-        ImplementationService implementationService
-    ) {
-
-        this.dataSourceService = dataSourceService;
-        this.boardGameService = boardGameService;
-        this.imageService = imageService;
-        this.categoryService = categoryService;
-        this.mechanicService = mechanicService;
-        this.familyService = familyService;
-        this.expansionService = expansionService;
-        this.designerService = designerService;
-        this.artistService = artistService;
-        this.publisherService = publisherService;
-        this.accessoryService = accessoryService;
-        this.integrationService = integrationService;
-        this.implementationService = implementationService;
-
-    }
-
     @Override
-    public Either<CreateBoardGameFromBGGError, BoardGameSummary> execute(BoardGameFromBGG boardGameFromBGG) {
+    public BoardGameSummary execute(BoardGameFromBGG boardGameFromBGG)
+        throws CreateBoardGameFromBGGException {
 
-        Either<CreateBoardGameFromBGGError, Long> dataSourceIdContainer =
-            dataSourceService.getDataSource(DataSourceName.BOARD_GAME_GEEK, EXCEPTION_TO_ERROR)
-            .map(DataSource::getId);
+        try {
 
-        logger.info(
-            String.format(
-                "Creating board game with the external id '%s' using data from boardgamegeek.com",
-                boardGameFromBGG.id()
-            )
-        );
+            long dataSourceId = dataSourceService.getDataSource(DataSourceName.BOARD_GAME_GEEK).getId();
 
-        Either<CreateBoardGameFromBGGError, BoardGameSummary> result =
-            dataSourceIdContainer.flatMap(dataSourceId ->
-                boardGameService.saveBoardGame(dataSourceId, boardGameFromBGG, EXCEPTION_TO_ERROR)
-                    .flatMap(boardGameWithReference ->
-                        processBoardGame(
-                            boardGameFromBGG,
-                            dataSourceId,
-                            boardGameWithReference.getLeft(),
-                            boardGameWithReference.getRight()
-                        )
-                    )
+            logger.info(
+                String.format(
+                    "Creating board game with the external id '%s' using data from boardgamegeek.com",
+                    boardGameFromBGG.id()
+                )
             );
 
-        result
-            .peek(boardGameSummary -> logger.info(String.format("Created board game with id '%d'", boardGameSummary.id())))
-            .peekLeft(error -> logger.info(String.format("Error creating board game with the external id '%s' using data from boardgamegeek.com", boardGameFromBGG.id())));
+            ImmutablePair<BoardGame, BoardGameReference> boardGameWithReference =
+                boardGameService.saveBoardGame(dataSourceId, boardGameFromBGG);
 
-        return result;
+            BoardGameSummary result = processBoardGame(
+                boardGameFromBGG,
+                dataSourceId,
+                boardGameWithReference.getLeft(),
+                boardGameWithReference.getRight()
+            );
+
+            logger.info(String.format("Created board game with id '%d'", result.id()));
+
+            return result;
+
+        }
+        catch (BGMException bgmException) {
+            String message = String.format("Error creating board game with the external id '%s' using data from boardgamegeek.com", boardGameFromBGG.id());
+            logger.error(message, bgmException);
+
+            throw switch (bgmException) {
+                case com.irostec.boardgamemanager.common.error.RequiredValueNotFoundException requiredValueNotFoundException ->
+                    new MissingPropertyException(requiredValueNotFoundException);
+                case com.irostec.boardgamemanager.common.error.BoundaryException boundaryException ->
+                    new BoundaryException(boundaryException);
+            };
+
+        }
 
     }
 
-    private Either<CreateBoardGameFromBGGError, BoardGameSummary> processBoardGame(
+    private BoardGameSummary processBoardGame(
         BoardGameFromBGG boardGameFromBGG,
         Long dataSourceId,
         BoardGame boardGame,
         BoardGameReference boardGameReference
-    ) {
+    ) throws BGMException {
 
         long boardGameId = boardGame.getId();
         long boardGameReferenceId = boardGameReference.getId();
 
-        Either<CreateBoardGameFromBGGError, BoardGameFixedData> boardGameFixedDataContainer =
-            boardGameService.saveBoardGameFixedData(boardGameId, boardGameFromBGG, EXCEPTION_TO_ERROR);
+        BoardGameFixedData boardGameFixedData =
+            boardGameService.saveBoardGameFixedData(boardGameId, boardGameFromBGG);
 
-        Either<CreateBoardGameFromBGGError, Collection<com.irostec.boardgamemanager.application.boundary.api.jpa.entity.Image>> imagesContainer =
-            imageService.saveImages(boardGameReferenceId, boardGameFromBGG::images, EXCEPTION_TO_ERROR);
+        Collection<com.irostec.boardgamemanager.application.boundary.api.jpa.entity.Image> images =
+            imageService.saveImages(boardGameReferenceId, boardGameFromBGG.images());
 
 
-        Function<LinkType, List<Link>> linkTypeToLinks = buildFunctionToGetLinksByType(boardGameFromBGG.links());
+        Map<LinkType, List<Link>> linksByLinkType = boardGameFromBGG.links().stream().collect(
+            Collectors.groupingBy(
+                Link::type,
+                Collectors.toList()
+            )
+        );
+        List<Link> defaultValue = Collections.emptyList();
 
-        Either<CreateBoardGameFromBGGError, Collection<BoardGameCategory>> categoriesContainer =
-            categoryService.saveCategories(
+
+        Collection<BoardGameCategory> categories =
+            categoryService.saveBoardGameCategories(
                 boardGameId,
                 dataSourceId,
-                () -> linkTypeToLinks.apply(LinkType.CATEGORY),
-                LINK_TO_KEY,
-                EXCEPTION_TO_ERROR
+                linksByLinkType.getOrDefault(LinkType.CATEGORY, defaultValue)
             );
 
-        Either<CreateBoardGameFromBGGError, Collection<BoardGameMechanic>> mechanicsContainer =
-            mechanicService.saveMechanics(
+        Collection<BoardGameMechanic> mechanics =
+            mechanicService.saveBoardGameMechanics(
                 boardGameId,
                 dataSourceId,
-                () -> linkTypeToLinks.apply(LinkType.MECHANIC),
-                LINK_TO_KEY,
-                EXCEPTION_TO_ERROR
+                linksByLinkType.getOrDefault(LinkType.MECHANIC, defaultValue)
             );
 
-        Either<CreateBoardGameFromBGGError, Collection<BoardGameFamily>> familiesContainer =
-            familyService.saveFamilies(
+        Collection<BoardGameFamily> families =
+            familyService.saveBoardGameFamilies(
                 boardGameId,
                 dataSourceId,
-                () -> linkTypeToLinks.apply(LinkType.FAMILY),
-                LINK_TO_KEY,
-                EXCEPTION_TO_ERROR
+                linksByLinkType.getOrDefault(LinkType.FAMILY, defaultValue)
             );
 
 
-        Either<CreateBoardGameFromBGGError, Collection<BoardGame>> boardGamesContainer =
-            boardGameService.getAllBoardGames(EXCEPTION_TO_ERROR);
-
-        Either<CreateBoardGameFromBGGError, Collection<BoardGameReference>> boardGameReferencesContainer =
-            boardGameService.getAllBoardGameReferences(EXCEPTION_TO_ERROR);
-
-        Either<CreateBoardGameFromBGGError, Collection<BoardGameExpansion>> expansionsContainer =
+        Collection<BoardGameExpansion> expansions =
             expansionService.saveBoardGameExpansions(
                 boardGameId,
                 dataSourceId,
-                () -> linkTypeToLinks.apply(LinkType.EXPANSION),
-                LINK_TO_KEY,
-                EXCEPTION_TO_ERROR
+                linksByLinkType.getOrDefault(LinkType.EXPANSION, defaultValue)
             );
 
-        Either<CreateBoardGameFromBGGError, Collection<BoardGameAccessory>> accessoriesContainer =
+        Collection<BoardGameAccessory> accessories =
             accessoryService.saveBoardGameAccessories(
                 boardGameId,
                 dataSourceId,
-                () -> linkTypeToLinks.apply(LinkType.ACCESSORY),
-                LINK_TO_KEY,
-                EXCEPTION_TO_ERROR
+                linksByLinkType.getOrDefault(LinkType.ACCESSORY, defaultValue)
             );
 
-        Either<CreateBoardGameFromBGGError, Collection<BoardGameIntegration>> integrationsContainer =
+        Collection<BoardGameIntegration> integrations =
             integrationService.saveBoardGameIntegrations(
                 boardGameId,
                 dataSourceId,
-                () -> linkTypeToLinks.apply(LinkType.INTEGRATION),
-                LINK_TO_KEY,
-                EXCEPTION_TO_ERROR
+                linksByLinkType.getOrDefault(LinkType.INTEGRATION, defaultValue)
             );
 
-        Either<CreateBoardGameFromBGGError, Collection<BoardGameImplementation>> implementationsContainer =
+        Collection<BoardGameImplementation> implementations =
             implementationService.saveBoardGameImplementations(
                 boardGameId,
                 dataSourceId,
-                () -> linkTypeToLinks.apply(LinkType.IMPLEMENTATION),
-                LINK_TO_KEY,
-                EXCEPTION_TO_ERROR
+                linksByLinkType.getOrDefault(LinkType.IMPLEMENTATION, defaultValue)
             );
 
-        Either<CreateBoardGameFromBGGError, Collection<BoardGameDesigner>> designersContainer =
+
+        Collection<BoardGameDesigner> designers =
             designerService.saveBoardGameDesigners(
                 boardGameId,
                 dataSourceId,
-                () -> linkTypeToLinks.apply(LinkType.DESIGNER),
-                LINK_TO_KEY,
-                EXCEPTION_TO_ERROR
+                linksByLinkType.getOrDefault(LinkType.DESIGNER, defaultValue)
             );
 
-        Either<CreateBoardGameFromBGGError, Collection<BoardGameArtist>> artistsContainer =
+        Collection<BoardGameArtist> artists =
             artistService.saveBoardGameArtists(
                 boardGameId,
                 dataSourceId,
-                () -> linkTypeToLinks.apply(LinkType.ARTIST),
-                LINK_TO_KEY,
-                EXCEPTION_TO_ERROR
+                linksByLinkType.getOrDefault(LinkType.ARTIST, defaultValue)
             );
 
-        Either<CreateBoardGameFromBGGError, Collection<BoardGamePublisher>> publishersContainer =
+        Collection<BoardGamePublisher> publishers =
             publisherService.saveBoardGamePublishers(
                 boardGameId,
                 dataSourceId,
-                () -> linkTypeToLinks.apply(LinkType.PUBLISHER),
-                LINK_TO_KEY,
-                EXCEPTION_TO_ERROR
+                linksByLinkType.getOrDefault(LinkType.PUBLISHER, defaultValue)
             );
 
-        Either<CreateBoardGameFromBGGError, BoardGameSummary> result =
-            boardGameFixedDataContainer.flatMap(
-                boardGameFixed -> imagesContainer.flatMap(
-                    images -> categoriesContainer.flatMap(
-                        categories -> mechanicsContainer.flatMap(
-                            mechanics -> familiesContainer.flatMap(
-                                families -> expansionsContainer.flatMap(
-                                    expansions -> accessoriesContainer.flatMap(
-                                        accessories -> integrationsContainer.flatMap(
-                                            integrations -> implementationsContainer.flatMap(
-                                                implementations -> designersContainer.flatMap(
-                                                    designers -> artistsContainer.flatMap(
-                                                        artists -> publishersContainer.map(
-                                                            publishers -> new BoardGameSummary(boardGameId)
-                                                        )
-                                                    )
-                                                )
-                                            )
-                                        )
-                                    )
-                                )
-                            )
-                        )
-                    )
-                )
-            );
-
-        return result;
-
-    }
-
-    private static Function<LinkType, List<Link>> buildFunctionToGetLinksByType(Collection<Link> links) {
-
-        Map<LinkType, List<Link>> linksByType = links.stream().collect(Collectors.groupingBy(Link::type));
-
-        List<Link> emptyList = Collections.emptyList();
-
-        return
-            linkType -> linksByType.getOrDefault(linkType, emptyList);
+        return new BoardGameSummary(boardGameId);
 
     }
 

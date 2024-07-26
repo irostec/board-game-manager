@@ -1,143 +1,147 @@
 package com.irostec.boardgamemanager.application.boundary.api.jpa.service;
 
-import com.irostec.boardgamemanager.application.boundary.api.jpa.entity.Accessory;
-import com.irostec.boardgamemanager.application.boundary.api.jpa.entity.AccessoryReference;
-import com.irostec.boardgamemanager.application.boundary.api.jpa.entity.BoardGameAccessory;
+import com.google.common.collect.Streams;
+import com.irostec.boardgamemanager.application.boundary.api.jpa.entity.*;
 import com.irostec.boardgamemanager.application.boundary.api.jpa.repository.AccessoryReferenceRepository;
 import com.irostec.boardgamemanager.application.boundary.api.jpa.repository.AccessoryRepository;
 import com.irostec.boardgamemanager.application.boundary.api.jpa.repository.BoardGameAccessoryRepository;
+import com.irostec.boardgamemanager.application.boundary.createandincludeboardgamefrombgg.components.EntityCollectionProcessor;
+import com.irostec.boardgamemanager.application.boundary.createandincludeboardgamefrombgg.components.filters.AccessoryReferenceCollectionFilter;
+import com.irostec.boardgamemanager.application.boundary.createandincludeboardgamefrombgg.components.filters.BoardGameAccessoryCollectionFilter;
 import com.irostec.boardgamemanager.application.core.shared.bggapi.output.Link;
-import com.irostec.boardgamemanager.common.utility.PartialFunctionDefinition;
+import com.irostec.boardgamemanager.common.error.BoundaryException;
 
-import io.vavr.control.Either;
 import lombok.AllArgsConstructor;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
+import java.util.Comparator;
 import java.util.stream.Stream;
 
-import static com.irostec.boardgamemanager.common.utility.Functions.orderedZipper;
-import static com.irostec.boardgamemanager.common.utility.Functions.zipper;
 import static com.irostec.boardgamemanager.common.utility.Functions.wrapWithErrorHandling;
-import static com.irostec.boardgamemanager.common.utility.Functions.processItems;
-import static com.irostec.boardgamemanager.common.utility.Functions.mapAndProcess;
 
 @Component
 @AllArgsConstructor
 public class AccessoryService {
 
-    private static final Function<Link, Accessory> LINK_TO_ACCESSORY = link -> {
-
-        Accessory accessory = new Accessory();
-        accessory.setName(link.value());
-
-        return accessory;
-
-    };
-
     private final AccessoryRepository accessoryRepository;
     private final AccessoryReferenceRepository accessoryReferenceRepository;
     private final BoardGameAccessoryRepository boardGameAccessoryRepository;
+    private final AccessoryReferenceCollectionFilter accessoryReferenceCollectionFilter;
+    private final BoardGameAccessoryCollectionFilter boardGameAccessoryCollectionFilter;
+    private final EntityCollectionProcessor entityCollectionProcessor;
 
-    public <E> Either<E, Collection<BoardGameAccessory>> saveBoardGameAccessories(
+    private Collection<AccessoryReference> saveAccessoryReferences(
+        Long dataSourceId,
+        Collection<Link> links
+    ) throws BoundaryException {
+
+        EntityCollectionProcessor.PartialFunctionDefinition<Link, AccessoryReference> partialFunctionDefinition =
+            entityCollectionProcessor.buildPartialFunctionDefinition(
+                links,
+                dataSourceId,
+                accessoryReferenceCollectionFilter,
+                Link::id,
+                AccessoryReference::getExternalId
+            );
+
+        Collection<Accessory> newAccessories = wrapWithErrorHandling(() ->
+            accessoryRepository.saveAll(
+                partialFunctionDefinition.getUnmappedDomain().stream()
+                    .map(
+                        link -> {
+
+                            Accessory accessory = new Accessory();
+                            accessory.setName(link.value());
+
+                            return accessory;
+
+                        }
+                    )
+                    .toList()
+            )
+        );
+
+        Collection<ImmutablePair<Link, Accessory>> newLinksWithAccessories =
+            Streams.zip(
+                links.stream().sorted(Comparator.comparing(Link::value)),
+                newAccessories.stream().sorted(Comparator.comparing(Accessory::getName)),
+                ImmutablePair::of
+            )
+            .toList();
+
+        Collection<AccessoryReference> newAccessoryReferences = wrapWithErrorHandling(() ->
+            accessoryReferenceRepository.saveAll(
+                newLinksWithAccessories.stream().map(
+                    linkWithAccessory -> {
+
+                        AccessoryReference accessoryReference = new AccessoryReference();
+                        accessoryReference.setDataSourceId(dataSourceId);
+                        accessoryReference.setAccessoryId(linkWithAccessory.getRight().getId());
+                        accessoryReference.setExternalId(linkWithAccessory.getLeft().id());
+
+                        return accessoryReference;
+                    }
+                )
+                .toList()
+            )
+        );
+
+        Collection<AccessoryReference> existingAccessoryReferences = partialFunctionDefinition.getImage();
+
+        return Stream.concat(newAccessoryReferences.stream(), existingAccessoryReferences.stream()).toList();
+
+    }
+
+    private Collection<BoardGameAccessory> saveBoardGameAccessories(
+        long boardGameId,
+        Collection<AccessoryReference> accessoryReferences
+    ) throws BoundaryException {
+
+        EntityCollectionProcessor.PartialFunctionDefinition<AccessoryReference, BoardGameAccessory> partialFunctionDefinition =
+            entityCollectionProcessor.buildPartialFunctionDefinition(
+                accessoryReferences,
+                boardGameId,
+                boardGameAccessoryCollectionFilter,
+                AccessoryReference::getAccessoryId,
+                BoardGameAccessory::getAccessoryId
+            );
+
+        Collection<BoardGameAccessory> newBoardGameAccessories = wrapWithErrorHandling(() ->
+            boardGameAccessoryRepository.saveAll(
+                partialFunctionDefinition.getUnmappedDomain().stream()
+                    .map(
+                        accessoryReference -> {
+
+                            BoardGameAccessory boardGameAccessory = new BoardGameAccessory();
+                            boardGameAccessory.setBoardGameId(boardGameId);
+                            boardGameAccessory.setAccessoryId(accessoryReference.getAccessoryId());
+
+                            return boardGameAccessory;
+                        }
+                    )
+                    .toList()
+            )
+        );
+
+        Collection<BoardGameAccessory> existingBoardGameAccessories = partialFunctionDefinition.getImage();
+
+        return Stream.concat(newBoardGameAccessories.stream(), existingBoardGameAccessories.stream()).toList();
+
+    }
+
+    @Transactional(rollbackFor = Throwable.class)
+    public Collection<BoardGameAccessory> saveBoardGameAccessories(
         long boardGameId,
         Long dataSourceId,
-        Supplier<Collection<Link>> linksSupplier,
-        Function<Link, String> linkToKey,
-        Function<Throwable, E> exceptionToError
-    ) {
+        Collection<Link> links
+    ) throws BoundaryException {
 
-        Either<E, PartialFunctionDefinition<Link, ImmutablePair<Accessory, AccessoryReference>>> partialFunctionDefinitionContainer =
-            PartialFunctionDefinition.of(
-                linksSupplier.get(),
-                links -> wrapWithErrorHandling(
-                    () -> accessoryRepository.findByDataSourceIdAndExternalIdIn(
-                        dataSourceId,
-                        links.stream().map(linkToKey).collect(Collectors.toList())
-                    ),
-                    exceptionToError
-                ),
-                linkToKey,
-                pairOfAccessoryAndAccessoryReference -> pairOfAccessoryAndAccessoryReference.getRight().getExternalId()
-            );
+        Collection<AccessoryReference> accessoryReferences = saveAccessoryReferences(dataSourceId, links);
 
-        Either<E, Map<Boolean, Collection<ImmutablePair<Link, Accessory>>>> accessoriesByStatusContainer =
-            partialFunctionDefinitionContainer.flatMap(partialFunctionDefinition ->
-                processItems(
-                    partialFunctionDefinition,
-                    newInputs -> mapAndProcess(
-                        newInputs,
-                        LINK_TO_ACCESSORY,
-                        accessoryRepository::saveAll,
-                        exceptionToError
-                    ),
-                    Either::right,
-                    zipper(ImmutablePair::of),
-                    orderedZipper(
-                        linkToKey,
-                        pairOfAccessoryAndAccessoryReference -> pairOfAccessoryAndAccessoryReference.getRight().getExternalId(),
-                        Function.identity(),
-                        ImmutablePair::getLeft,
-                        ImmutablePair::of
-                    ),
-                    (newItems, existingItems) -> Map.of(true, newItems, false, existingItems)
-                )
-            );
-
-        Either<E, Collection<AccessoryReference>> accessoryReferencesContainer =
-            accessoriesByStatusContainer.flatMap(accessoriesByStatus ->
-                processItems(
-                    accessoriesByStatus,
-                    newInputs -> mapAndProcess(
-                        newInputs,
-                        linkAndAccessory -> {
-
-                            AccessoryReference accessoryReference = new AccessoryReference();
-                            accessoryReference.setDataSourceId(dataSourceId);
-                            accessoryReference.setAccessoryId(linkAndAccessory.getRight().getId());
-                            accessoryReference.setExternalId(linkAndAccessory.getLeft().id());
-
-                            return accessoryReference;
-                        },
-                        accessoryReferenceRepository::saveAll,
-                        exceptionToError
-                    ),
-                    existingInputs -> mapAndProcess(
-                        existingInputs,
-                        linkAndAccessory -> linkAndAccessory.getLeft().id(),
-                        externalIds ->
-                            accessoryReferenceRepository.findByDataSourceIdAndExternalIdIn(dataSourceId, externalIds)
-                                .collect(Collectors.toList()),
-                        exceptionToError
-                    ),
-                    (newItems, existingItems) ->
-                        Stream.concat(newItems.stream(), existingItems.stream()).collect(Collectors.toList())
-                )
-            );
-
-        Either<E, Collection<BoardGameAccessory>> boardGameAccessoriesContainer =
-            accessoryReferencesContainer.flatMap(accessoryReferences ->
-                mapAndProcess(
-                    accessoryReferences,
-                    accessoryReference -> {
-
-                        BoardGameAccessory boardGameAccessory = new BoardGameAccessory();
-                        boardGameAccessory.setBoardGameId(boardGameId);
-                        boardGameAccessory.setAccessoryId(accessoryReference.getAccessoryId());
-
-                        return boardGameAccessory;
-                    },
-                    boardGameAccessoryRepository::saveAll,
-                    exceptionToError
-                )
-            );
-
-        return boardGameAccessoriesContainer;
+        return saveBoardGameAccessories(boardGameId, accessoryReferences);
 
     }
 

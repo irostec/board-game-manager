@@ -3,16 +3,18 @@ package com.irostec.boardgamemanager.application.boundary.api.jpa.service;
 import com.irostec.boardgamemanager.application.boundary.api.jpa.entity.BoardGameImplementation;
 import com.irostec.boardgamemanager.application.boundary.api.jpa.entity.BoardGameReference;
 import com.irostec.boardgamemanager.application.boundary.api.jpa.repository.BoardGameImplementationRepository;
+import com.irostec.boardgamemanager.application.boundary.createandincludeboardgamefrombgg.components.EntityCollectionProcessor;
+import com.irostec.boardgamemanager.application.boundary.createandincludeboardgamefrombgg.components.filters.BoardGameImplementationCollectionFilter;
 import com.irostec.boardgamemanager.application.core.shared.bggapi.output.Link;
-import io.vavr.control.Either;
+import com.irostec.boardgamemanager.common.error.BoundaryException;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
-import java.util.function.Function;
-import java.util.function.Supplier;
+import java.util.stream.Stream;
 
-import static com.irostec.boardgamemanager.common.utility.Functions.mapAndProcess;
+import static com.irostec.boardgamemanager.common.utility.Functions.wrapWithErrorHandling;
 
 @Component
 @AllArgsConstructor
@@ -20,42 +22,49 @@ public class ImplementationService {
 
     private final BoardGameService boardGameService;
     private final BoardGameImplementationRepository boardGameImplementationRepository;
+    private final BoardGameImplementationCollectionFilter boardGameImplementationCollectionFilter;
+    private final EntityCollectionProcessor entityCollectionProcessor;
 
-    public <E> Either<E, Collection<BoardGameImplementation>> saveBoardGameImplementations(
+    @Transactional(rollbackFor = Throwable.class)
+    public Collection<BoardGameImplementation> saveBoardGameImplementations(
         long boardGameId,
         Long dataSourceId,
-        Supplier<Collection<Link>> linksSupplier,
-        Function<Link, String> linkToKey,
-        Function<Throwable, E> exceptionToError
-    ) {
+        Collection<Link> links
+    ) throws BoundaryException {
 
-        Either<E, Collection<BoardGameReference>> boardGameReferencesContainer =
-            boardGameService.saveBoardGameReferences(
+        Collection<BoardGameReference> boardGameReferences =
+            boardGameService.saveBoardGameReferences(dataSourceId, links);
+
+        EntityCollectionProcessor.PartialFunctionDefinition<BoardGameReference, BoardGameImplementation> partialFunctionDefinition =
+            entityCollectionProcessor.buildPartialFunctionDefinition(
+                boardGameReferences,
                 dataSourceId,
-                linksSupplier.get(),
-                linkToKey,
-                exceptionToError
+                boardGameImplementationCollectionFilter,
+                BoardGameReference::getBoardGameId,
+                BoardGameImplementation::getImplementerBoardGameId
             );
 
-        Either<E, Collection<BoardGameImplementation>> boardGameImplementationsContainer =
-            boardGameReferencesContainer.flatMap(boardGameReferences ->
-                mapAndProcess(
-                    boardGameReferences,
-                    boardGameReference -> {
+        Collection<BoardGameImplementation> newBoardGameImplementations = wrapWithErrorHandling(() ->
+            boardGameImplementationRepository.saveAll(
+                partialFunctionDefinition.getUnmappedDomain().stream()
+                    .map(
+                        boardGameReference -> {
 
-                        BoardGameImplementation boardGameImplementation = new BoardGameImplementation();
-                        boardGameImplementation.setImplementedBoardGameId(boardGameId);
-                        boardGameImplementation.setImplementerBoardGameId(boardGameReference.getBoardGameId());
+                            BoardGameImplementation boardGameImplementation = new BoardGameImplementation();
+                            boardGameImplementation.setImplementedBoardGameId(boardGameId);
+                            boardGameImplementation.setImplementerBoardGameId(boardGameReference.getBoardGameId());
 
-                        return boardGameImplementation;
+                            return boardGameImplementation;
 
-                    },
-                    boardGameImplementationRepository::saveAll,
-                    exceptionToError
-                )
-            );
+                        }
+                    )
+                    .toList()
+            )
+        );
 
-        return boardGameImplementationsContainer;
+        Collection<BoardGameImplementation> existingBoardGameImplementations = partialFunctionDefinition.getImage();
+
+        return Stream.concat(newBoardGameImplementations.stream(), existingBoardGameImplementations.stream()).toList();
 
     }
 

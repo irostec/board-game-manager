@@ -9,8 +9,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
-import java.util.stream.Collectors;
-
 /**
  * BGMUserDetailsService
  * A customized UserDetailsService
@@ -35,8 +33,8 @@ final class BGMUserDetailsService implements UserDetailsService {
                 bgmUser.isCredentialsNonExpired(),
                 bgmUser.isAccountNonLocked(),
                 bgmUser.getRoles().stream()
-                        .map(BGMRoleMapper.INSTANCE::toGrantedAuthority)
-                        .collect(Collectors.toList())
+                    .map(BGMRoleMapper.INSTANCE::toGrantedAuthority)
+                    .toList()
         );
 
     }

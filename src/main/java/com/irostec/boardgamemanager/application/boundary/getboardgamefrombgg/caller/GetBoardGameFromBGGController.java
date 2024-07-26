@@ -1,6 +1,6 @@
 package com.irostec.boardgamemanager.application.boundary.getboardgamefrombgg.caller;
 
-import com.irostec.boardgamemanager.application.core.GetBoardGameFromBGGService;
+import com.irostec.boardgamemanager.application.core.GetBoardGameFromBGG;
 
 import com.irostec.boardgamemanager.application.core.shared.bggapi.error.BGGApiError;
 import com.irostec.boardgamemanager.application.core.shared.bggapi.error.BoardGameNotFound;
@@ -26,13 +26,13 @@ class GetBoardGameFromBGGController {
 
     private static final String EXTERNAL_API_NAME = "boardgamegeek.com";
 
-    private final GetBoardGameFromBGGService getBoardGameFromBGGService;
+    private final GetBoardGameFromBGG getBoardGameFromBGG;
 
     @GetMapping(value = "/boardgamegeek/{externalId}")
     @HasUserRole
     ResponseEntity<?> getBoardGameFromBGG(@PathVariable String externalId) {
 
-        return getBoardGameFromBGGService.execute(externalId)
+        return getBoardGameFromBGG.execute(externalId)
             .map(OutputMapper::toMap)
             .fold(GetBoardGameFromBGGController::errorToHttpResponse, ResponseEntity::ok);
 
