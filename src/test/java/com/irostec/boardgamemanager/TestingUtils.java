@@ -2,7 +2,7 @@ package com.irostec.boardgamemanager;
 
 import com.irostec.boardgamemanager.application.core.shared.bggapi.output.*;
 import com.irostec.boardgamemanager.common.type.NonNegativeDecimal;
-import com.irostec.boardgamemanager.common.type.NonNegativeInteger;
+import com.irostec.boardgamemanager.common.type.NonNegativeShort;
 import com.irostec.boardgamemanager.common.type.PositiveShort;
 
 import java.util.List;
@@ -35,7 +35,7 @@ public final class TestingUtils {
 
         final String description = "Gloomhaven is a game of Euro-inspired tactical combat in a persistent world of shifting motives.";
 
-        final int yearPublished = 2017;
+        final short yearPublished = 2017;
 
         final PositiveShort minimumPlayers = PositiveShort.of("minimumPlayers", 1).get();
         final PositiveShort maximumPlayers = PositiveShort.of("maximumPlayers", 4).get();
@@ -46,7 +46,7 @@ public final class TestingUtils {
         final PositiveShort averagePlaytime = PositiveShort.of("averagePlaytime", 120).get();
         final Playtime playtime = Playtime.of(minimumPlaytime, maximumPlaytime, averagePlaytime).get();
 
-        final NonNegativeInteger minimumAge = NonNegativeInteger.of("minimumAge", 14).get();
+        final NonNegativeShort minimumAge = NonNegativeShort.of("minimumAge", (short) 14).get();
 
         final Set<Link> links = Set.of(
                 new Link(LinkType.CATEGORY, "1022", "Adventure"),

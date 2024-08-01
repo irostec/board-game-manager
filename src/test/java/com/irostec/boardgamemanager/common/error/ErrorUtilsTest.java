@@ -21,7 +21,7 @@ class ErrorUtilsTest {
         final Validation<String, PositiveShort> invalidPositiveInteger1 = PositiveShort.of("invalidPositiveInteger1", -1);
         final Validation<String, PositiveShort> invalidPositiveInteger2 = PositiveShort.of("invalidPositiveInteger2", 0);
         final Validation<String, PositiveShort> validPositiveInteger1 = PositiveShort.of("validPositiveInteger1", 1);
-        final Validation<String, PositiveShort> validPositiveInteger2 = PositiveShort.of("validPositiveInteger2", Integer.MAX_VALUE);
+        final Validation<String, PositiveShort> validPositiveInteger2 = PositiveShort.of("validPositiveInteger2", Short.MAX_VALUE);
 
         final Stream<Validation<String, PositiveShort>> validations =
                 List.of(
@@ -45,7 +45,7 @@ class ErrorUtilsTest {
     void testSequenceWithoutErrors() {
 
         final Validation<String, PositiveShort> validPositiveInteger1 = PositiveShort.of("validPositiveInteger1", 1);
-        final Validation<String, PositiveShort> validPositiveInteger2 = PositiveShort.of("validPositiveInteger2", Integer.MAX_VALUE);
+        final Validation<String, PositiveShort> validPositiveInteger2 = PositiveShort.of("validPositiveInteger2", Short.MAX_VALUE);
 
         final Stream<Validation<String, PositiveShort>> validations =
                 List.of(validPositiveInteger1, validPositiveInteger2).stream();
