@@ -1,7 +1,6 @@
 package com.irostec.boardgamemanager.application.boundary.api.jpa.service;
 
-import com.irostec.boardgamemanager.application.boundary.api.jpa.entity.BoardGameCategory;
-import com.irostec.boardgamemanager.application.boundary.api.jpa.entity.Category;
+import com.irostec.boardgamemanager.application.boundary.api.jpa.entity.*;
 import com.irostec.boardgamemanager.application.boundary.api.jpa.repository.BoardGameCategoryRepository;
 import com.irostec.boardgamemanager.application.boundary.api.jpa.repository.CategoryRepository;
 
@@ -9,16 +8,15 @@ import com.irostec.boardgamemanager.application.boundary.createandincludeboardga
 import com.irostec.boardgamemanager.application.boundary.createandincludeboardgamefrombgg.components.filters.BoardGameCategoryCollectionFilter;
 import com.irostec.boardgamemanager.application.boundary.createandincludeboardgamefrombgg.components.filters.CategoryCollectionFilter;
 import com.irostec.boardgamemanager.application.core.shared.bggapi.output.Link;
-import com.irostec.boardgamemanager.common.error.BoundaryException;
 
 import java.util.Collection;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-
-import static com.irostec.boardgamemanager.common.utility.Functions.wrapWithErrorHandling;
 
 @Component
 @AllArgsConstructor
@@ -30,81 +28,95 @@ public class CategoryService {
     private final BoardGameCategoryCollectionFilter boardGameCategoryCollectionFilter;
     private final EntityCollectionProcessor entityCollectionProcessor;
 
-    private Collection<Category> saveCategories(Long dataSourceId, Collection<Link> links)
-    throws BoundaryException {
+    private Collection<Category> saveCategories(DataSource dataSource, Collection<Link> links) {
 
-        EntityCollectionProcessor.PartialFunctionDefinition<Link, Category> partialFunctionDefinition =
-            entityCollectionProcessor.buildPartialFunctionDefinition(
-                links, dataSourceId, categoryCollectionFilter, Link::id, Category::getExternalId
+        EntityCollectionProcessor.Result<Link, Category> filteringResult =
+            entityCollectionProcessor.apply(
+                links, dataSource, categoryCollectionFilter, Link::id, Category::getExternalId
             );
 
-        Collection<Category> newCategories = wrapWithErrorHandling(() ->
-            categoryRepository.saveAllAndFlush(
-                partialFunctionDefinition.getUnmappedDomain().stream()
-                    .map(
-                        link -> {
+        BiConsumer<Link, Category> categoryConsumer = (link, category) -> {
 
-                            Category category = new Category();
-                            category.setDataSourceId(dataSourceId);
-                            category.setExternalId(link.id());
-                            category.setName(link.value());
+            category.setDataSource(dataSource);
+            category.setExternalId(link.id());
+            category.setName(link.value());
 
-                            return category;
+        };
+
+        Collection<Category> newCategories = categoryRepository.saveAll(
+            filteringResult.getUnmapped().stream()
+                .map(
+                    link -> {
+
+                            Category newCategory = new Category();
+                            categoryConsumer.accept(link, newCategory);
+
+                            return newCategory;
 
                         }
-                    )
-                    .toList()
-            )
+                )
+                .toList()
         );
 
-        Collection<Category> existingCategories = partialFunctionDefinition.getImage();
+        filteringResult.getMappings().forEach(categoryConsumer);
 
-        return Stream.concat(newCategories.stream(), existingCategories.stream()).toList();
+        return Stream.concat(newCategories.stream(), filteringResult.getMappings().values().stream()).toList();
 
     }
 
-    private Collection<BoardGameCategory> saveBoardGameCategories(Long boardGameId, Collection<Category> categories)
-    throws BoundaryException {
+    private Collection<BoardGameCategory> saveBoardGameCategories(
+        BoardGame boardGame,
+        Collection<Category> categories
+    ) {
 
-        EntityCollectionProcessor.PartialFunctionDefinition<Category, BoardGameCategory> partialFunctionDefinition =
-            entityCollectionProcessor.buildPartialFunctionDefinition(
-                    categories, boardGameId, boardGameCategoryCollectionFilter, Category::getId, BoardGameCategory::getCategoryId
-                );
+        EntityCollectionProcessor.Result<Category, BoardGameCategory> filteringResult =
+            entityCollectionProcessor.apply(
+                categories,
+                boardGame,
+                boardGameCategoryCollectionFilter,
+                Function.identity(),
+                BoardGameCategory::getCategory
+            );
 
-        Collection<BoardGameCategory> newBoardGameCategories = wrapWithErrorHandling(() ->
-            boardGameCategoryRepository.saveAllAndFlush(
-                partialFunctionDefinition.getUnmappedDomain().stream()
-                    .map(
-                        category -> {
+        BiConsumer<Category, BoardGameCategory> categoryConsumer =
+            (category, boardGameCategory) -> {
 
-                            BoardGameCategory boardGameCategory = new BoardGameCategory();
-                            boardGameCategory.setBoardGameId(boardGameId);
-                            boardGameCategory.setCategoryId(category.getId());
+                boardGameCategory.setBoardGame(boardGame);
+                boardGameCategory.setCategory(category);
 
-                            return boardGameCategory;
+            };
 
-                        }
-                    )
-                    .toList()
-            )
+        Collection<BoardGameCategory> newBoardGameCategories = boardGameCategoryRepository.saveAll(
+            filteringResult.getUnmapped().stream()
+                .map(
+                    category -> {
+
+                        BoardGameCategory newBoardGameCategory = new BoardGameCategory();
+                        categoryConsumer.accept(category, newBoardGameCategory);
+
+                        return newBoardGameCategory;
+
+                    }
+                )
+                .toList()
         );
 
-        Collection<BoardGameCategory> existingBoardGameCategories = partialFunctionDefinition.getImage();
+        filteringResult.getMappings().forEach(categoryConsumer);
 
-        return Stream.concat(newBoardGameCategories.stream(), existingBoardGameCategories.stream()).toList();
+        return Stream.concat(newBoardGameCategories.stream(), filteringResult.getMappings().values().stream()).toList();
 
     }
 
-    @Transactional(rollbackFor = Throwable.class)
+    @Transactional
     public Collection<BoardGameCategory> saveBoardGameCategories(
-        Long boardGameId,
-        Long dataSourceId,
+        BoardGame boardGame,
+        DataSource dataSource,
         Collection<Link> links
-    ) throws BoundaryException {
+    ) {
 
-        Collection<Category> categories = this.saveCategories(dataSourceId, links);
+        Collection<Category> categories = this.saveCategories(dataSource, links);
 
-        return saveBoardGameCategories(boardGameId, categories);
+        return saveBoardGameCategories(boardGame, categories);
 
     }
 

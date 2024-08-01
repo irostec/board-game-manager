@@ -18,9 +18,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.function.BiConsumer;
 import java.util.stream.Stream;
-
-import static com.irostec.boardgamemanager.common.utility.Functions.wrapWithErrorHandling;
 
 @Component
 @AllArgsConstructor
@@ -34,114 +33,111 @@ public class AccessoryService {
     private final EntityCollectionProcessor entityCollectionProcessor;
 
     private Collection<AccessoryReference> saveAccessoryReferences(
-        Long dataSourceId,
+        DataSource dataSource,
         Collection<Link> links
     ) throws BoundaryException {
 
-        EntityCollectionProcessor.PartialFunctionDefinition<Link, AccessoryReference> partialFunctionDefinition =
-            entityCollectionProcessor.buildPartialFunctionDefinition(
+        EntityCollectionProcessor.Result<Link, AccessoryReference> filteringResult =
+            entityCollectionProcessor.apply(
                 links,
-                dataSourceId,
+                dataSource,
                 accessoryReferenceCollectionFilter,
                 Link::id,
                 AccessoryReference::getExternalId
             );
 
-        Collection<Accessory> newAccessories = wrapWithErrorHandling(() ->
-            accessoryRepository.saveAll(
-                partialFunctionDefinition.getUnmappedDomain().stream()
-                    .map(
-                        link -> {
+        BiConsumer<Link, Accessory> accessoryConsumer =
+            (link, accessory) -> {
+                accessory.setName(link.value());
+            };
 
-                            Accessory accessory = new Accessory();
-                            accessory.setName(link.value());
+        Collection<Accessory> newAccessories = accessoryRepository.saveAll(
+            filteringResult.getUnmapped().stream()
+                .map(
+                    link -> {
 
-                            return accessory;
+                        Accessory newAccessory = new Accessory();
+                        accessoryConsumer.accept(link, newAccessory);
 
-                        }
-                    )
-                    .toList()
-            )
+                        return newAccessory;
+
+                    }
+                )
+                .toList()
         );
 
         Collection<ImmutablePair<Link, Accessory>> newLinksWithAccessories =
             Streams.zip(
-                links.stream().sorted(Comparator.comparing(Link::value)),
+                filteringResult.getUnmapped().stream().sorted(Comparator.comparing(Link::value)),
                 newAccessories.stream().sorted(Comparator.comparing(Accessory::getName)),
                 ImmutablePair::of
             )
             .toList();
 
-        Collection<AccessoryReference> newAccessoryReferences = wrapWithErrorHandling(() ->
-            accessoryReferenceRepository.saveAll(
-                newLinksWithAccessories.stream().map(
-                    linkWithAccessory -> {
+        Collection<AccessoryReference> newAccessoryReferences = accessoryReferenceRepository.saveAll(
+            newLinksWithAccessories.stream().map(
+                linkWithAccessory -> {
 
-                        AccessoryReference accessoryReference = new AccessoryReference();
-                        accessoryReference.setDataSourceId(dataSourceId);
-                        accessoryReference.setAccessoryId(linkWithAccessory.getRight().getId());
-                        accessoryReference.setExternalId(linkWithAccessory.getLeft().id());
+                    AccessoryReference accessoryReference = new AccessoryReference();
+                    accessoryReference.setDataSource(dataSource);
+                    accessoryReference.setAccessory(linkWithAccessory.getRight());
+                    accessoryReference.setExternalId(linkWithAccessory.getLeft().id());
 
-                        return accessoryReference;
-                    }
-                )
-                .toList()
+                    return accessoryReference;
+                }
             )
+            .toList()
         );
 
-        Collection<AccessoryReference> existingAccessoryReferences = partialFunctionDefinition.getImage();
+        Collection<AccessoryReference> existingAccessoryReferences = filteringResult.getMappings().values();
 
         return Stream.concat(newAccessoryReferences.stream(), existingAccessoryReferences.stream()).toList();
 
     }
 
     private Collection<BoardGameAccessory> saveBoardGameAccessories(
-        long boardGameId,
+        BoardGame boardGame,
         Collection<AccessoryReference> accessoryReferences
-    ) throws BoundaryException {
+    ) {
 
-        EntityCollectionProcessor.PartialFunctionDefinition<AccessoryReference, BoardGameAccessory> partialFunctionDefinition =
-            entityCollectionProcessor.buildPartialFunctionDefinition(
+        EntityCollectionProcessor.Result<AccessoryReference, BoardGameAccessory> filteringResult =
+            entityCollectionProcessor.apply(
                 accessoryReferences,
-                boardGameId,
+                boardGame,
                 boardGameAccessoryCollectionFilter,
-                AccessoryReference::getAccessoryId,
-                BoardGameAccessory::getAccessoryId
+                AccessoryReference::getAccessory,
+                BoardGameAccessory::getAccessory
             );
 
-        Collection<BoardGameAccessory> newBoardGameAccessories = wrapWithErrorHandling(() ->
-            boardGameAccessoryRepository.saveAll(
-                partialFunctionDefinition.getUnmappedDomain().stream()
-                    .map(
-                        accessoryReference -> {
+        Collection<BoardGameAccessory> newBoardGameAccessories = boardGameAccessoryRepository.saveAll(
+            filteringResult.getUnmapped().stream()
+                .map(
+                    accessoryReference -> {
 
-                            BoardGameAccessory boardGameAccessory = new BoardGameAccessory();
-                            boardGameAccessory.setBoardGameId(boardGameId);
-                            boardGameAccessory.setAccessoryId(accessoryReference.getAccessoryId());
+                        BoardGameAccessory boardGameAccessory = new BoardGameAccessory();
+                        boardGameAccessory.setBoardGame(boardGame);
+                        boardGameAccessory.setAccessory(accessoryReference.getAccessory());
 
-                            return boardGameAccessory;
-                        }
-                    )
-                    .toList()
-            )
+                        return boardGameAccessory;
+                    }
+                )
+                .toList()
         );
 
-        Collection<BoardGameAccessory> existingBoardGameAccessories = partialFunctionDefinition.getImage();
-
-        return Stream.concat(newBoardGameAccessories.stream(), existingBoardGameAccessories.stream()).toList();
+        return Stream.concat(newBoardGameAccessories.stream(), filteringResult.getMappings().values().stream()).toList();
 
     }
 
-    @Transactional(rollbackFor = Throwable.class)
+    @Transactional
     public Collection<BoardGameAccessory> saveBoardGameAccessories(
-        long boardGameId,
-        Long dataSourceId,
+        BoardGame boardGame,
+        DataSource dataSource,
         Collection<Link> links
-    ) throws BoundaryException {
+    ) {
 
-        Collection<AccessoryReference> accessoryReferences = saveAccessoryReferences(dataSourceId, links);
+        Collection<AccessoryReference> accessoryReferences = saveAccessoryReferences(dataSource, links);
 
-        return saveBoardGameAccessories(boardGameId, accessoryReferences);
+        return saveBoardGameAccessories(boardGame, accessoryReferences);
 
     }
 

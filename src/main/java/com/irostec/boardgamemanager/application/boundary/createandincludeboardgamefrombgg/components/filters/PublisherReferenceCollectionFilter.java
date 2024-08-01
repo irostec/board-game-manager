@@ -1,5 +1,6 @@
 package com.irostec.boardgamemanager.application.boundary.createandincludeboardgamefrombgg.components.filters;
 
+import com.irostec.boardgamemanager.application.boundary.api.jpa.entity.DataSource;
 import com.irostec.boardgamemanager.application.boundary.api.jpa.entity.PublisherReference;
 import com.irostec.boardgamemanager.application.boundary.api.jpa.repository.PublisherReferenceRepository;
 import com.irostec.boardgamemanager.application.boundary.createandincludeboardgamefrombgg.types.CollectionFilter;
@@ -14,19 +15,19 @@ import java.util.stream.Stream;
 @AllArgsConstructor
 @Component
 public class PublisherReferenceCollectionFilter
-    implements CollectionFilter<Long, String, PublisherReference, BoundaryException>
+    implements CollectionFilter<DataSource, String, PublisherReference>
 {
 
     private final PublisherReferenceRepository publisherReferenceRepository;
 
     @Transactional(readOnly = true)
     @Override
-    public Stream<PublisherReference> findBySharedKeyAndUniqueKeysIn(
-        Long sharedKey,
+    public Stream<PublisherReference> findByParentAndUniqueKeysIn(
+        DataSource parent,
         Collection<String> uniqueKeys
     ) throws BoundaryException {
 
-        return publisherReferenceRepository.findByDataSourceIdAndExternalIdIn(sharedKey, uniqueKeys);
+        return publisherReferenceRepository.findByDataSourceAndExternalIdIn(parent, uniqueKeys);
 
     }
 

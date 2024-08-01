@@ -1,6 +1,8 @@
 package com.irostec.boardgamemanager.application.boundary.createandincludeboardgamefrombgg.components.filters;
 
+import com.irostec.boardgamemanager.application.boundary.api.jpa.entity.BoardGame;
 import com.irostec.boardgamemanager.application.boundary.api.jpa.entity.BoardGameDesigner;
+import com.irostec.boardgamemanager.application.boundary.api.jpa.entity.Designer;
 import com.irostec.boardgamemanager.application.boundary.api.jpa.repository.BoardGameDesignerRepository;
 import com.irostec.boardgamemanager.application.boundary.createandincludeboardgamefrombgg.types.CollectionFilter;
 import com.irostec.boardgamemanager.common.error.BoundaryException;
@@ -14,19 +16,19 @@ import java.util.stream.Stream;
 @AllArgsConstructor
 @Component
 public class BoardGameDesignerCollectionFilter
-    implements CollectionFilter<Long, Long, BoardGameDesigner, BoundaryException>
+    implements CollectionFilter<BoardGame, Designer, BoardGameDesigner>
 {
 
     private final BoardGameDesignerRepository boardGameDesignerRepository;
 
     @Transactional(readOnly = true)
     @Override
-    public Stream<BoardGameDesigner> findBySharedKeyAndUniqueKeysIn(
-        Long sharedKey,
-        Collection<Long> uniqueKeys
+    public Stream<BoardGameDesigner> findByParentAndUniqueKeysIn(
+        BoardGame parent,
+        Collection<Designer> uniqueKeys
     ) throws BoundaryException {
 
-        return boardGameDesignerRepository.findByBoardGameIdAndDesignerIdIn(sharedKey, uniqueKeys);
+        return boardGameDesignerRepository.findByBoardGameAndDesignerIn(parent, uniqueKeys);
 
     }
 

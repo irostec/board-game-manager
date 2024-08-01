@@ -1,9 +1,9 @@
 package com.irostec.boardgamemanager.application.boundary.createandincludeboardgamefrombgg.components.filters;
 
+import com.irostec.boardgamemanager.application.boundary.api.jpa.entity.BoardGame;
 import com.irostec.boardgamemanager.application.boundary.api.jpa.entity.BoardGameExpansion;
 import com.irostec.boardgamemanager.application.boundary.api.jpa.repository.BoardGameExpansionRepository;
 import com.irostec.boardgamemanager.application.boundary.createandincludeboardgamefrombgg.types.CollectionFilter;
-import com.irostec.boardgamemanager.common.error.BoundaryException;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,19 +14,19 @@ import java.util.stream.Stream;
 @AllArgsConstructor
 @Component
 public class BoardGameExpansionCollectionFilter
-    implements CollectionFilter<Long, Long, BoardGameExpansion, BoundaryException>
+    implements CollectionFilter<BoardGame, BoardGame, BoardGameExpansion>
 {
 
     private final BoardGameExpansionRepository boardGameExpansionRepository;
 
     @Transactional(readOnly = true)
     @Override
-    public Stream<BoardGameExpansion> findBySharedKeyAndUniqueKeysIn(
-        Long sharedKey,
-        Collection<Long> uniqueKeys
-    ) throws BoundaryException {
+    public Stream<BoardGameExpansion> findByParentAndUniqueKeysIn(
+        BoardGame parent,
+        Collection<BoardGame> uniqueKeys
+    ) {
 
-        return boardGameExpansionRepository.findByExpandedBoardGameIdAndExpanderBoardGameIdIn(sharedKey, uniqueKeys);
+        return boardGameExpansionRepository.findByExpandedAndExpanderIn(parent, uniqueKeys);
 
     }
 

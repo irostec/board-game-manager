@@ -2,12 +2,15 @@ package com.irostec.boardgamemanager.application.boundary.api.jpa.entity;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
-import lombok.Data;
+import lombok.Getter;
 import lombok.Setter;
+
+import java.util.Objects;
 
 @Entity
 @Table(name = "board_game_expansion")
-@Data
+@Getter
+@Setter
 public class BoardGameExpansion {
 
     @Id
@@ -15,10 +18,32 @@ public class BoardGameExpansion {
     @Setter(AccessLevel.NONE)
     private long id;
 
-    @Column(nullable = false)
-    private long expandedBoardGameId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name="expanded_board_game_id", nullable=false)
+    private BoardGame expanded;
 
-    @Column(nullable = false)
-    private long expanderBoardGameId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name="expander_board_game_id", nullable=false)
+    private BoardGame expander;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        BoardGameExpansion that = (BoardGameExpansion) o;
+        return id == that.id;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
+
+    @Override
+    public String toString() {
+        return "BoardGameExpansion{" +
+                "id=" + id +
+                '}';
+    }
 
 }

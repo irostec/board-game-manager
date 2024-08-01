@@ -1,5 +1,6 @@
 package com.irostec.boardgamemanager.application.boundary.api.jpa.service;
 
+import com.irostec.boardgamemanager.application.boundary.api.jpa.entity.BoardGameReference;
 import com.irostec.boardgamemanager.application.boundary.api.jpa.entity.Image;
 import com.irostec.boardgamemanager.application.boundary.api.jpa.entity.ImageType;
 import com.irostec.boardgamemanager.application.boundary.api.jpa.helper.ImageTypeMapper;
@@ -7,20 +8,14 @@ import com.irostec.boardgamemanager.application.boundary.api.jpa.repository.Imag
 
 import com.irostec.boardgamemanager.application.boundary.createandincludeboardgamefrombgg.components.EntityCollectionProcessor;
 import com.irostec.boardgamemanager.application.boundary.createandincludeboardgamefrombgg.components.filters.ImageCollectionFilter;
-import com.irostec.boardgamemanager.common.error.BGMException;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import static com.irostec.boardgamemanager.common.utility.Functions.wrapWithErrorHandling;
 
 @Component
 @AllArgsConstructor
@@ -38,72 +33,50 @@ public class ImageService {
     private final ImageCollectionFilter imageCollectionFilter;
     private final EntityCollectionProcessor entityCollectionProcessor;
 
-    private static Map<com.irostec.boardgamemanager.application.core.shared.bggapi.output.ImageType, ImageType> buildImageTypeMap(
-        CacheService cacheService,
-        Collection<com.irostec.boardgamemanager.application.core.shared.bggapi.output.Image> images
-    ) throws BGMException {
-
-        Set<com.irostec.boardgamemanager.application.core.shared.bggapi.output.ImageType> imageTypes =
-            images.stream()
-                .map(IMAGE_TO_IMAGE_TYPE)
-                .collect(Collectors.toSet());
-
-        Map<com.irostec.boardgamemanager.application.core.shared.bggapi.output.ImageType, ImageType> imageTypeMap =
-            new HashMap<>();
-
-        for (com.irostec.boardgamemanager.application.core.shared.bggapi.output.ImageType imageType : imageTypes) {
-
-            imageTypeMap.put(
-                imageType,
-                cacheService.findImageTypeByName(ImageTypeMapper.INSTANCE.map(imageType))
-            );
-
-        }
-
-        return imageTypeMap;
-
-    }
-
-    @Transactional(rollbackFor = Throwable.class)
+    @Transactional
     public Collection<Image> saveImages(
-        Long boardGameReferenceId,
+        BoardGameReference boardGameReference,
         Collection<com.irostec.boardgamemanager.application.core.shared.bggapi.output.Image> images
-    ) throws BGMException {
+    ) {
 
-        Map<com.irostec.boardgamemanager.application.core.shared.bggapi.output.ImageType, ImageType> imageTypeMap =
-            buildImageTypeMap(cacheService, images);
-
-        EntityCollectionProcessor.PartialFunctionDefinition<com.irostec.boardgamemanager.application.core.shared.bggapi.output.Image, Image> partialFunctionDefinition =
-            entityCollectionProcessor.buildPartialFunctionDefinition(
-                images, boardGameReferenceId, imageCollectionFilter, IMAGE_TO_KEY, Image::getUrl
+        EntityCollectionProcessor.Result<com.irostec.boardgamemanager.application.core.shared.bggapi.output.Image, Image> filteringResult =
+            entityCollectionProcessor.apply(
+                images, boardGameReference, imageCollectionFilter, IMAGE_TO_KEY, Image::getUrl
             );
 
-        Function<com.irostec.boardgamemanager.application.core.shared.bggapi.output.Image, Image> imageMapping =
-            input -> {
+        BiConsumer<com.irostec.boardgamemanager.application.core.shared.bggapi.output.Image, Image> imageConsumer =
+            (bggImage, jpaImage) -> {
 
-                ImageType imageType = imageTypeMap.get(IMAGE_TO_IMAGE_TYPE.apply(input));
+                ImageType imageType = cacheService.findImageTypeByName(
+                    ImageTypeMapper.INSTANCE.map(
+                        IMAGE_TO_IMAGE_TYPE.apply(bggImage)
+                    )
+                );
 
-                com.irostec.boardgamemanager.application.boundary.api.jpa.entity.Image image =
-                    new com.irostec.boardgamemanager.application.boundary.api.jpa.entity.Image();
-                image.setImageTypeId(imageType.getId());
-                image.setBoardGameReferenceId(boardGameReferenceId);
-                image.setUrl(input.link());
-
-                return image;
+                jpaImage.setImageType(imageType);
+                jpaImage.setBoardGameReference(boardGameReference);
+                jpaImage.setUrl(bggImage.link());
 
             };
 
-        Collection<Image> newImages = wrapWithErrorHandling(() ->
-            imageRepository.saveAllAndFlush(
-                partialFunctionDefinition.getUnmappedDomain().stream()
-                    .map(imageMapping)
-                    .toList()
-            )
+        Collection<Image> newImages = imageRepository.saveAll(
+            filteringResult.getUnmapped().stream()
+                .map(
+                    bggImage -> {
+
+                        Image newImage = new Image();
+                        imageConsumer.accept(bggImage, newImage);
+
+                        return newImage;
+
+                    }
+                )
+                .toList()
         );
 
-        Collection<Image> existingImages = partialFunctionDefinition.getImage();
+        filteringResult.getMappings().forEach(imageConsumer);
 
-        return Stream.concat(newImages.stream(), existingImages.stream()).toList();
+        return Stream.concat(newImages.stream(), filteringResult.getMappings().values().stream()).toList();
 
     }
 

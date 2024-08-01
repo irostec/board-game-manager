@@ -21,8 +21,6 @@ import java.util.stream.Stream;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.springframework.transaction.annotation.Transactional;
 
-import static com.irostec.boardgamemanager.common.utility.Functions.wrapWithErrorHandling;
-
 @Component
 @AllArgsConstructor
 public class DesignerService {
@@ -44,26 +42,29 @@ public class DesignerService {
     private final EntityCollectionProcessor entityCollectionProcessor;
 
     private Collection<DesignerReference> saveDesignerReferences(
-        Long dataSourceId,
+        DataSource dataSource,
         Collection<Link> links
-    ) throws BoundaryException {
+    ) {
 
-        EntityCollectionProcessor.PartialFunctionDefinition<Link, DesignerReference> partialFunctionDefinition =
-            entityCollectionProcessor.buildPartialFunctionDefinition(
+        EntityCollectionProcessor.Result<Link, DesignerReference> filteringResult =
+            entityCollectionProcessor.apply(
                 links,
-                dataSourceId,
+                dataSource,
                 designerReferenceCollectionFilter,
                 Link::id,
                 DesignerReference::getExternalId
             );
 
-        Collection<Designer> newDesigners = wrapWithErrorHandling(() ->
-            designerRepository.saveAll(
-                partialFunctionDefinition.getUnmappedDomain().stream()
-                    .map(LINK_TO_DESIGNER)
-                    .toList()
-            )
+        Collection<Designer> newDesigners = designerRepository.saveAll(
+            filteringResult.getUnmapped().stream()
+                .map(LINK_TO_DESIGNER)
+                .toList()
         );
+
+        filteringResult.getMappings().forEach(
+            (existingLink, existingDesignerReference) -> {
+                existingDesignerReference.getDesigner().setName(existingLink.value());
+            });
 
         Collection<ImmutablePair<Link, Designer>> newLinksWithDesigners =
             Streams.zip(
@@ -73,73 +74,74 @@ public class DesignerService {
             )
             .toList();
 
-        Collection<DesignerReference> newDesignerReferences = wrapWithErrorHandling(() ->
+        Collection<DesignerReference> newDesignerReferences =
             designerReferenceRepository.saveAll(
                 newLinksWithDesigners.stream().map(
                     linkWithDesigner -> {
 
                         DesignerReference designerReference = new DesignerReference();
-                        designerReference.setDataSourceId(dataSourceId);
-                        designerReference.setDesignerId(linkWithDesigner.getRight().getId());
+                        designerReference.setDataSource(dataSource);
+                        designerReference.setDesigner(linkWithDesigner.getRight());
                         designerReference.setExternalId(linkWithDesigner.getLeft().id());
 
                         return designerReference;
                     }
                 )
                 .toList()
-            )
-        );
+            );
 
-        Collection<DesignerReference> existingDesignerReferences = partialFunctionDefinition.getImage();
+        Collection<DesignerReference> existingDesignerReferences = filteringResult.getMappings().values();
 
         return Stream.concat(newDesignerReferences.stream(), existingDesignerReferences.stream()).toList();
 
     }
 
     private Collection<BoardGameDesigner> saveBoardGameDesigners(
-        long boardGameId,
+        BoardGame boardGame,
         Collection<DesignerReference> designerReferences
     ) throws BoundaryException {
 
-        EntityCollectionProcessor.PartialFunctionDefinition<DesignerReference, BoardGameDesigner> partialFunctionDefinition =
-            entityCollectionProcessor.buildPartialFunctionDefinition(
-                designerReferences, boardGameId, boardGameDesignerCollectionFilter, DesignerReference::getDesignerId, BoardGameDesigner::getDesignerId
+        EntityCollectionProcessor.Result<DesignerReference, BoardGameDesigner> filteringResult =
+            entityCollectionProcessor.apply(
+                designerReferences,
+                boardGame,
+                boardGameDesignerCollectionFilter,
+                DesignerReference::getDesigner,
+                BoardGameDesigner::getDesigner
             );
 
-        Collection<BoardGameDesigner> newBoardGameDesigners = wrapWithErrorHandling(() ->
-            boardGameDesignerRepository.saveAll(
-                partialFunctionDefinition.getUnmappedDomain().stream()
-                    .map(
-                        designerReference -> {
+        Collection<BoardGameDesigner> newBoardGameDesigners = boardGameDesignerRepository.saveAll(
+            filteringResult.getUnmapped().stream()
+                .map(
+                    designerReference -> {
 
-                            BoardGameDesigner boardGameDesigner = new BoardGameDesigner();
-                            boardGameDesigner.setBoardGameId(boardGameId);
-                            boardGameDesigner.setDesignerId(designerReference.getDesignerId());
+                        BoardGameDesigner boardGameDesigner = new BoardGameDesigner();
+                        boardGameDesigner.setBoardGame(boardGame);
+                        boardGameDesigner.setDesigner(designerReference.getDesigner());
 
-                            return boardGameDesigner;
+                        return boardGameDesigner;
 
-                        }
-                    )
-                    .toList()
-            )
+                    }
+                )
+                .toList()
         );
 
-        Collection<BoardGameDesigner> existingBoardGameDesigners = partialFunctionDefinition.getImage();
+        Collection<BoardGameDesigner> existingBoardGameDesigners = filteringResult.getMappings().values();
 
         return Stream.concat(newBoardGameDesigners.stream(), existingBoardGameDesigners.stream()).toList();
 
     }
 
-    @Transactional(rollbackFor = Throwable.class)
+    @Transactional
     public Collection<BoardGameDesigner> saveBoardGameDesigners(
-        long boardGameId,
-        Long dataSourceId,
+        BoardGame boardGame,
+        DataSource dataSource,
         Collection<Link> links
-    ) throws BoundaryException {
+    ) {
 
-        Collection<DesignerReference> designerReferences = saveDesignerReferences(dataSourceId, links);
+        Collection<DesignerReference> designerReferences = saveDesignerReferences(dataSource, links);
 
-        return saveBoardGameDesigners(boardGameId, designerReferences);
+        return saveBoardGameDesigners(boardGame, designerReferences);
 
     }
 

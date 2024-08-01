@@ -6,7 +6,6 @@ import com.irostec.boardgamemanager.application.core.shared.includeboardgame.out
 
 public interface IncludeBoardGame {
 
-     BoardGameInclusionResult execute(RequestToIncludeBoardGame requestToIncludeBoardGame)
-        throws IncludeBoardGameException;
+     BoardGameInclusionResult execute(RequestToIncludeBoardGame requestToIncludeBoardGame);
 
 }

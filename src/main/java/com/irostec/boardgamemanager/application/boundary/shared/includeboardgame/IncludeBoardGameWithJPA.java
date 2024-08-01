@@ -3,12 +3,11 @@ package com.irostec.boardgamemanager.application.boundary.shared.includeboardgam
 import com.irostec.boardgamemanager.application.boundary.api.jpa.entity.BoardGameInclusionDetail;
 import com.irostec.boardgamemanager.application.boundary.api.jpa.service.BoardGameInclusionService;
 import com.irostec.boardgamemanager.application.core.shared.IncludeBoardGame;
-import com.irostec.boardgamemanager.application.core.shared.includeboardgame.exception.BoundaryException;
-import com.irostec.boardgamemanager.application.core.shared.includeboardgame.exception.IncludeBoardGameException;
 import com.irostec.boardgamemanager.application.core.shared.includeboardgame.input.RequestToIncludeBoardGame;
 import com.irostec.boardgamemanager.application.core.shared.includeboardgame.output.BoardGameInclusionResult;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component
 @AllArgsConstructor
@@ -17,27 +16,20 @@ class IncludeBoardGameWithJPA
 
     private final BoardGameInclusionService boardGameInclusionService;
 
+    @Transactional
     @Override
-    public BoardGameInclusionResult execute(RequestToIncludeBoardGame requestToIncludeBoardGame)
-        throws IncludeBoardGameException {
+    public BoardGameInclusionResult execute(RequestToIncludeBoardGame requestToIncludeBoardGame) {
 
-        try {
+        BoardGameInclusionDetail boardGameInclusionDetail = boardGameInclusionService.includeBoardGame(
+            requestToIncludeBoardGame.userId(),
+            requestToIncludeBoardGame.boardGameId(),
+            requestToIncludeBoardGame.reason()
+        );
 
-            BoardGameInclusionDetail boardGameInclusionDetail = boardGameInclusionService.includeBoardGame(
-                    requestToIncludeBoardGame.userId(),
-                    requestToIncludeBoardGame.boardGameId(),
-                    requestToIncludeBoardGame.reason()
-            );
-
-            return new BoardGameInclusionResult(
-                    boardGameInclusionDetail.getBoardGameId(),
-                    boardGameInclusionDetail.getBoardGameInclusionId()
-            );
-
-        }
-        catch (com.irostec.boardgamemanager.common.error.BoundaryException boundaryException) {
-            throw new BoundaryException(boundaryException);
-        }
+        return new BoardGameInclusionResult(
+            boardGameInclusionDetail.getBoardGame().getId(),
+            boardGameInclusionDetail.getBoardGameInclusion().getId()
+        );
 
     }
 

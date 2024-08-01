@@ -1,7 +1,6 @@
 package com.irostec.boardgamemanager.application.boundary.api.jpa.service;
 
-import com.irostec.boardgamemanager.application.boundary.api.jpa.entity.BoardGameMechanic;
-import com.irostec.boardgamemanager.application.boundary.api.jpa.entity.Mechanic;
+import com.irostec.boardgamemanager.application.boundary.api.jpa.entity.*;
 import com.irostec.boardgamemanager.application.boundary.api.jpa.repository.BoardGameMechanicRepository;
 import com.irostec.boardgamemanager.application.boundary.api.jpa.repository.MechanicRepository;
 import com.irostec.boardgamemanager.application.boundary.createandincludeboardgamefrombgg.components.EntityCollectionProcessor;
@@ -14,9 +13,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 import java.util.stream.Stream;
-
-import static com.irostec.boardgamemanager.common.utility.Functions.wrapWithErrorHandling;
 
 @Component
 @AllArgsConstructor
@@ -29,82 +28,91 @@ public class MechanicService {
 
     private final EntityCollectionProcessor entityCollectionProcessor;
 
-    private Collection<Mechanic> saveMechanics(Long dataSourceId, Collection<Link> links)
-    throws BoundaryException {
+    private Collection<Mechanic> saveMechanics(DataSource dataSource, Collection<Link> links) {
 
-        EntityCollectionProcessor.PartialFunctionDefinition<Link, Mechanic> partialFunctionDefinition =
-            entityCollectionProcessor.buildPartialFunctionDefinition(
-                links, dataSourceId, mechanicCollectionFilter, Link::id, Mechanic::getExternalId
+        EntityCollectionProcessor.Result<Link, Mechanic> filteringResult =
+            entityCollectionProcessor.apply(
+                links, dataSource, mechanicCollectionFilter, Link::id, Mechanic::getExternalId
             );
 
-        Collection<Mechanic> newMechanics = wrapWithErrorHandling(() ->
-            mechanicRepository.saveAll(
-                partialFunctionDefinition.getUnmappedDomain().stream()
-                    .map(
-                        link -> {
+        BiConsumer<Link, Mechanic> mechanicConsumer = (link, mechanic) -> {
 
-                            Mechanic mechanic = new Mechanic();
-                            mechanic.setDataSourceId(dataSourceId);
-                            mechanic.setExternalId(link.id());
-                            mechanic.setName(link.value());
+            mechanic.setDataSource(dataSource);
+            mechanic.setExternalId(link.id());
+            mechanic.setName(link.value());
 
-                            return mechanic;
+        };
 
-                        }
-                    )
-                    .toList()
-            )
+        Collection<Mechanic> newMechanics = mechanicRepository.saveAll(
+            filteringResult.getUnmapped().stream()
+                .map(
+                    link -> {
+
+                        Mechanic newMechanic = new Mechanic();
+                        mechanicConsumer.accept(link, newMechanic);
+
+                        return newMechanic;
+
+                    }
+                )
+                .toList()
         );
 
-        Collection<Mechanic> existingMechanics = partialFunctionDefinition.getImage();
+        filteringResult.getMappings().forEach(mechanicConsumer);
 
-        return Stream.concat(newMechanics.stream(), existingMechanics.stream()).toList();
+        return Stream.concat(newMechanics.stream(), filteringResult.getMappings().values().stream()).toList();
 
     }
 
-    private Collection<BoardGameMechanic> createBoardGameMechanics(Long boardGameId, Collection<Mechanic> mechanics)
-    throws BoundaryException {
+    private Collection<BoardGameMechanic> saveBoardGameMechanics(
+        BoardGame boardGame,
+        Collection<Mechanic> mechanics
+    ) {
 
-        EntityCollectionProcessor.PartialFunctionDefinition<Mechanic, BoardGameMechanic> partialFunctionDefinition =
-            entityCollectionProcessor.buildPartialFunctionDefinition(
-                mechanics, boardGameId, boardGameMechanicCollectionFilter, Mechanic::getId, BoardGameMechanic::getMechanicId
+        EntityCollectionProcessor.Result<Mechanic, BoardGameMechanic> filteringResult =
+            entityCollectionProcessor.apply(
+                mechanics, boardGame, boardGameMechanicCollectionFilter, Function.identity(), BoardGameMechanic::getMechanic
             );
 
-        Collection<BoardGameMechanic> newBoardGameMechanics = wrapWithErrorHandling(() ->
-            boardGameMechanicRepository.saveAll(
-                partialFunctionDefinition.getUnmappedDomain().stream()
-                    .map(
-                        mechanic -> {
+        BiConsumer<Mechanic, BoardGameMechanic> mechanicConsumer =
+            (mechanic, boardGameMechanic) -> {
 
-                            BoardGameMechanic boardGameMechanic = new BoardGameMechanic();
-                            boardGameMechanic.setBoardGameId(boardGameId);
-                            boardGameMechanic.setMechanicId(mechanic.getId());
+                boardGameMechanic.setBoardGame(boardGame);
+                boardGameMechanic.setMechanic(mechanic);
 
-                            return boardGameMechanic;
+            };
 
-                        }
-                    )
-                    .toList()
-            )
+        Collection<BoardGameMechanic> newBoardGameMechanics = boardGameMechanicRepository.saveAll(
+            filteringResult.getUnmapped().stream()
+                .map(
+                    mechanic -> {
+
+                        BoardGameMechanic newBoardGameMechanic = new BoardGameMechanic();
+                        mechanicConsumer.accept(mechanic, newBoardGameMechanic);
+
+                        return newBoardGameMechanic;
+
+                    }
+                )
+                .toList()
         );
 
-        Collection<BoardGameMechanic> existingBoardGameMechanics = partialFunctionDefinition.getImage();
+        filteringResult.getMappings().forEach(mechanicConsumer);
 
-        return Stream.concat(newBoardGameMechanics.stream(), existingBoardGameMechanics.stream()).toList();
+        return Stream.concat(newBoardGameMechanics.stream(), filteringResult.getMappings().values().stream()).toList();
 
     }
 
-    @Transactional(rollbackFor = Throwable.class)
+    @Transactional
     public Collection<BoardGameMechanic> saveBoardGameMechanics(
-        Long boardGameId,
-        Long dataSourceId,
+        BoardGame boardGame,
+        DataSource dataSource,
         Collection<Link> links
-    )
-    throws BoundaryException {
+    ) {
 
-        Collection<Mechanic> mechanics = this.saveMechanics(dataSourceId, links);
+        Collection<Mechanic> mechanics = this.saveMechanics(dataSource, links);
 
-        return createBoardGameMechanics(boardGameId, mechanics);
+        return saveBoardGameMechanics(boardGame, mechanics);
 
     }
 

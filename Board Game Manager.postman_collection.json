@@ -1,0 +1,283 @@
+{
+	"info": {
+		"_postman_id": "abca4179-691a-4ee9-8a6c-33549109b6e2",
+		"name": "Board Game Manager",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "32958379"
+	},
+	"item": [
+		{
+			"name": "Check health",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"array of all properties\", \r",
+							"function () {\r",
+							" \r",
+							"   pm.response.to.be.ok;\r",
+							"   jsonData = pm.response.json();\r",
+							"   pm.expect(jsonData.status).to.equal('UP');\r",
+							" \r",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{hostname}}/actuator/health",
+					"host": [
+						"{{hostname}}"
+					],
+					"path": [
+						"actuator",
+						"health"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Configure Loggers",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var xsrfCookie = postman.getResponseCookie(\"XSRF-TOKEN\");\r",
+							"postman.setEnvironmentVariable(\"xsrf-token\", xsrfCookie.value);\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "x-xsrf-token",
+						"value": "{{xsrf-token}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"configuredLevel\":\"INFO\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{hostname}}/actuator/loggers/com.irostec.boardgamemanager",
+					"host": [
+						"{{hostname}}"
+					],
+					"path": [
+						"actuator",
+						"loggers",
+						"com.irostec.boardgamemanager"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create User",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "x-xsrf-token",
+						"value": "{{xsrf-token}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"username\": \"{{username}}\",\r\n    \"password\": \"{{password}}\",\r\n    \"email\": \"{{email}}\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{hostname}}/v1/users",
+					"host": [
+						"{{hostname}}"
+					],
+					"path": [
+						"v1",
+						"users"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Authenticate User",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var status = pm.response.code;\r",
+							"\r",
+							"if (status === 200) {\r",
+							"    var jsonData = pm.response.json();\r",
+							"    postman.setEnvironmentVariable(\"jwt-token\", jsonData.token);\r",
+							"}\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "x-xsrf-token",
+						"value": "{{xsrf-token}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"username\": \"{{username}}\",\r\n    \"password\": \"{{password}}\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{hostname}}/v1/users/authenticate",
+					"host": [
+						"{{hostname}}"
+					],
+					"path": [
+						"v1",
+						"users",
+						"authenticate"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Fetch Board Game from boardgamegeek.com",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{jwt-token}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{hostname}}/v1/external-services/boardgamegeek/{{boardGameExternalId}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"path": [
+						"v1",
+						"external-services",
+						"boardgamegeek",
+						"{{boardGameExternalId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Board Game from boardgamegeek.com",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{jwt-token}}",
+						"type": "text"
+					},
+					{
+						"key": "x-xsrf-token",
+						"value": "{{xsrf-token}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"reasonForInclusion\": \"Best tactical combat board game ever!\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{hostname}}/v1/external-services/boardgamegeek/{{boardGameExternalId}}",
+					"host": [
+						"{{hostname}}"
+					],
+					"path": [
+						"v1",
+						"external-services",
+						"boardgamegeek",
+						"{{boardGameExternalId}}"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}

@@ -5,6 +5,8 @@ import com.irostec.boardgamemanager.configuration.security.annotation.HasUserRol
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,6 +15,8 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/v1/external-services")
 @AllArgsConstructor
 public class CreateAndIncludeBoardGameFromBGGController {
+
+    private final Logger logger = LogManager.getLogger(CreateAndIncludeBoardGameFromBGGController.class);
 
     private final CreateAndIncludeBoardGameFromBGG createAndIncludeBoardGameFromBGG;
 
@@ -25,43 +29,34 @@ public class CreateAndIncludeBoardGameFromBGGController {
 
         try {
 
-            CreateAndIncludeBoardGameFromBGG.Output output =
-                createAndIncludeBoardGameFromBGG.execute(
-                    new CreateAndIncludeBoardGameFromBGG.Input(externalId, request.reasonForInclusion())
-                );
+            CreateAndIncludeBoardGameFromBGG.Input input =
+                    new CreateAndIncludeBoardGameFromBGG.Input(externalId, request.reasonForInclusion());
+
+            logger.info(
+                String.format(
+                    "Executing use case to create and include a board game from boardgamegeek.com with the following input: %s",
+                    input
+                )
+            );
+
+            CreateAndIncludeBoardGameFromBGG.Output output = createAndIncludeBoardGameFromBGG.execute(input);
 
             return ResponseEntity.ok(new Response(output.boardGameId(), output.boardGameInclusionId()));
 
         }
-        catch (CreateAndIncludeBoardGameFromBGG.Failure failure) {
-            return exceptionToHttpResponse(failure);
+        catch (Exception exception) {
+            return exceptionToHttpResponse(exception);
         }
 
     }
 
-    private static ResponseEntity<String> exceptionToHttpResponse(CreateAndIncludeBoardGameFromBGG.Failure failure) {
+    private ResponseEntity<String> exceptionToHttpResponse(Exception exception) {
 
-        return switch (failure) {
-            case CreateAndIncludeBoardGameFromBGG.UserRetrievalException userRetrievalException -> {
-                final String userRetrievalErrorMessage =
-                    "Couldn't retrieve the information associated with the current user";
+        logger.error("Error executing use case to create and include a board game from boardgamegeek.com", exception);
 
-                yield new ResponseEntity<>(userRetrievalErrorMessage, HttpStatus.NOT_FOUND);
-            }
-            case CreateAndIncludeBoardGameFromBGG.BoardGameCreationException boardGameCreationException -> {
-                final String boardGameCreationErrorMessage =
-                    "An error occurred while attempting to create the board game. Please try again";
+        final String message = "An error occurred while attempting to create the board game. Please try again";
 
-                yield new ResponseEntity<>(boardGameCreationErrorMessage, HttpStatus.BAD_REQUEST);
-            }
-            case CreateAndIncludeBoardGameFromBGG.BoardGameInclusionException boardGameInclusionException -> {
-                final String boardGameInclusionErrorMessage =
-                    "An error occurred while attempting to include the board game in the user's list. Please try again";
-
-                yield new ResponseEntity<>(boardGameInclusionErrorMessage, HttpStatus.BAD_REQUEST);
-            }
-
-        };
+        return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
 
     }
 

@@ -8,30 +8,20 @@ import com.irostec.boardgamemanager.application.core.shared.bggapi.output.Link;
 import com.irostec.boardgamemanager.application.core.shared.bggapi.output.LinkType;
 
 import com.irostec.boardgamemanager.application.core.shared.createboardgamefrombgg.dependency.SaveBGGBoardGameFixedData;
-import com.irostec.boardgamemanager.application.core.shared.createboardgamefrombgg.error.CreateBoardGameFromBGGException;
-import com.irostec.boardgamemanager.application.core.shared.createboardgamefrombgg.error.MissingPropertyException;
 import com.irostec.boardgamemanager.application.core.shared.createboardgamefrombgg.output.BoardGameSummary;
 import com.irostec.boardgamemanager.application.core.shared.bggapi.output.BoardGameFromBGG;
-import com.irostec.boardgamemanager.application.core.shared.createboardgamefrombgg.error.BoundaryException;
 
-import com.irostec.boardgamemanager.common.error.BGMException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import lombok.AllArgsConstructor;
 import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component
 @AllArgsConstructor
-final class SaveBGGBoardGameFixedDataInJPA implements SaveBGGBoardGameFixedData {
-
-    private final Logger logger = LogManager.getLogger(SaveBGGBoardGameFixedDataInJPA.class);
+class SaveBGGBoardGameFixedDataInJPA implements SaveBGGBoardGameFixedData {
 
     private final DataSourceService dataSourceService;
     private final BoardGameService boardGameService;
@@ -47,67 +37,33 @@ final class SaveBGGBoardGameFixedDataInJPA implements SaveBGGBoardGameFixedData 
     private final IntegrationService integrationService;
     private final ImplementationService implementationService;
 
+    @Transactional
     @Override
-    public BoardGameSummary execute(BoardGameFromBGG boardGameFromBGG)
-        throws CreateBoardGameFromBGGException {
+    public BoardGameSummary execute(BoardGameFromBGG boardGameFromBGG) {
 
-        try {
+        DataSource dataSource = dataSourceService.getDataSource(DataSourceName.BOARD_GAME_GEEK);
 
-            long dataSourceId = dataSourceService.getDataSource(DataSourceName.BOARD_GAME_GEEK).getId();
+        ImmutablePair<BoardGame, BoardGameReference> boardGameWithReference =
+            boardGameService.saveBoardGame(dataSource, boardGameFromBGG);
 
-            logger.info(
-                String.format(
-                    "Creating board game with the external id '%s' using data from boardgamegeek.com",
-                    boardGameFromBGG.id()
-                )
-            );
-
-            ImmutablePair<BoardGame, BoardGameReference> boardGameWithReference =
-                boardGameService.saveBoardGame(dataSourceId, boardGameFromBGG);
-
-            BoardGameSummary result = processBoardGame(
-                boardGameFromBGG,
-                dataSourceId,
-                boardGameWithReference.getLeft(),
-                boardGameWithReference.getRight()
-            );
-
-            logger.info(String.format("Created board game with id '%d'", result.id()));
-
-            return result;
-
-        }
-        catch (BGMException bgmException) {
-            String message = String.format("Error creating board game with the external id '%s' using data from boardgamegeek.com", boardGameFromBGG.id());
-            logger.error(message, bgmException);
-
-            throw switch (bgmException) {
-                case com.irostec.boardgamemanager.common.error.RequiredValueNotFoundException requiredValueNotFoundException ->
-                    new MissingPropertyException(requiredValueNotFoundException);
-                case com.irostec.boardgamemanager.common.error.BoundaryException boundaryException ->
-                    new BoundaryException(boundaryException);
-            };
-
-        }
+        return processBoardGameCollections(
+            boardGameFromBGG,
+            dataSource,
+            boardGameWithReference.getLeft(),
+            boardGameWithReference.getRight()
+        );
 
     }
 
-    private BoardGameSummary processBoardGame(
+    private BoardGameSummary processBoardGameCollections(
         BoardGameFromBGG boardGameFromBGG,
-        Long dataSourceId,
+        DataSource dataSource,
         BoardGame boardGame,
         BoardGameReference boardGameReference
-    ) throws BGMException {
-
-        long boardGameId = boardGame.getId();
-        long boardGameReferenceId = boardGameReference.getId();
-
-        BoardGameFixedData boardGameFixedData =
-            boardGameService.saveBoardGameFixedData(boardGameId, boardGameFromBGG);
+    ) {
 
         Collection<com.irostec.boardgamemanager.application.boundary.api.jpa.entity.Image> images =
-            imageService.saveImages(boardGameReferenceId, boardGameFromBGG.images());
-
+            imageService.saveImages(boardGameReference, boardGameFromBGG.images());
 
         Map<LinkType, List<Link>> linksByLinkType = boardGameFromBGG.links().stream().collect(
             Collectors.groupingBy(
@@ -117,80 +73,79 @@ final class SaveBGGBoardGameFixedDataInJPA implements SaveBGGBoardGameFixedData 
         );
         List<Link> defaultValue = Collections.emptyList();
 
-
         Collection<BoardGameCategory> categories =
             categoryService.saveBoardGameCategories(
-                boardGameId,
-                dataSourceId,
+                boardGame,
+                dataSource,
                 linksByLinkType.getOrDefault(LinkType.CATEGORY, defaultValue)
             );
 
         Collection<BoardGameMechanic> mechanics =
             mechanicService.saveBoardGameMechanics(
-                boardGameId,
-                dataSourceId,
+                boardGame,
+                dataSource,
                 linksByLinkType.getOrDefault(LinkType.MECHANIC, defaultValue)
             );
 
         Collection<BoardGameFamily> families =
             familyService.saveBoardGameFamilies(
-                boardGameId,
-                dataSourceId,
+                boardGame,
+                dataSource,
                 linksByLinkType.getOrDefault(LinkType.FAMILY, defaultValue)
             );
 
 
         Collection<BoardGameExpansion> expansions =
             expansionService.saveBoardGameExpansions(
-                boardGameId,
-                dataSourceId,
+                boardGame,
+                dataSource,
                 linksByLinkType.getOrDefault(LinkType.EXPANSION, defaultValue)
             );
 
         Collection<BoardGameAccessory> accessories =
             accessoryService.saveBoardGameAccessories(
-                boardGameId,
-                dataSourceId,
+                boardGame,
+                dataSource,
                 linksByLinkType.getOrDefault(LinkType.ACCESSORY, defaultValue)
             );
 
         Collection<BoardGameIntegration> integrations =
             integrationService.saveBoardGameIntegrations(
-                boardGameId,
-                dataSourceId,
+                boardGame,
+                dataSource,
                 linksByLinkType.getOrDefault(LinkType.INTEGRATION, defaultValue)
             );
 
         Collection<BoardGameImplementation> implementations =
             implementationService.saveBoardGameImplementations(
-                boardGameId,
-                dataSourceId,
+                boardGame,
+                dataSource,
                 linksByLinkType.getOrDefault(LinkType.IMPLEMENTATION, defaultValue)
             );
 
 
         Collection<BoardGameDesigner> designers =
             designerService.saveBoardGameDesigners(
-                boardGameId,
-                dataSourceId,
+                boardGame,
+                dataSource,
                 linksByLinkType.getOrDefault(LinkType.DESIGNER, defaultValue)
             );
 
         Collection<BoardGameArtist> artists =
             artistService.saveBoardGameArtists(
-                boardGameId,
-                dataSourceId,
+                boardGame,
+                dataSource,
                 linksByLinkType.getOrDefault(LinkType.ARTIST, defaultValue)
             );
 
         Collection<BoardGamePublisher> publishers =
             publisherService.saveBoardGamePublishers(
-                boardGameId,
-                dataSourceId,
+                boardGame,
+                dataSource,
                 linksByLinkType.getOrDefault(LinkType.PUBLISHER, defaultValue)
             );
 
-        return new BoardGameSummary(boardGameId);
+        return new BoardGameSummary(boardGame.getId());
 
     }
 

@@ -15,7 +15,7 @@ public class CreateBoardGameFromBGG {
     private final SaveBGGBoardGameFixedData saveBGGBoardGameFixedData;
 
     public BoardGameSummary execute(BoardGameCreationRequest boardGameCreationRequest)
-        throws CreateBoardGameFromBGGException{
+        throws CreateBoardGameFromBGGException {
 
         BoardGameFromBGG boardGameFromBGG = bggApi.execute(boardGameCreationRequest.externalId())
             .getOrElseThrow(BGGApiException::new);

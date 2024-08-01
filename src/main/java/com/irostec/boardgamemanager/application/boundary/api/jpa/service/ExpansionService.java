@@ -1,7 +1,6 @@
 package com.irostec.boardgamemanager.application.boundary.api.jpa.service;
 
-import com.irostec.boardgamemanager.application.boundary.api.jpa.entity.BoardGameExpansion;
-import com.irostec.boardgamemanager.application.boundary.api.jpa.entity.BoardGameReference;
+import com.irostec.boardgamemanager.application.boundary.api.jpa.entity.*;
 import com.irostec.boardgamemanager.application.boundary.api.jpa.repository.BoardGameExpansionRepository;
 import com.irostec.boardgamemanager.application.boundary.createandincludeboardgamefrombgg.components.EntityCollectionProcessor;
 import com.irostec.boardgamemanager.application.boundary.createandincludeboardgamefrombgg.components.filters.BoardGameExpansionCollectionFilter;
@@ -13,9 +12,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
+import java.util.function.BiConsumer;
 import java.util.stream.Stream;
-
-import static com.irostec.boardgamemanager.common.utility.Functions.wrapWithErrorHandling;
 
 @Component
 @AllArgsConstructor
@@ -26,45 +24,49 @@ public class ExpansionService {
     private final BoardGameExpansionCollectionFilter boardGameExpansionCollectionFilter;
     private final EntityCollectionProcessor entityCollectionProcessor;
 
-    @Transactional(rollbackFor = Throwable.class)
+    @Transactional
     public Collection<BoardGameExpansion> saveBoardGameExpansions(
-        long boardGameId,
-        Long dataSourceId,
+        BoardGame boardGame,
+        DataSource dataSource,
         Collection<Link> links
     ) throws BoundaryException {
 
         Collection<BoardGameReference> boardGameReferences =
-            boardGameService.saveBoardGameReferences(dataSourceId, links);
+            boardGameService.saveBoardGameReferences(dataSource, links);
 
-        EntityCollectionProcessor.PartialFunctionDefinition<BoardGameReference, BoardGameExpansion> partialFunctionDefinition =
-            entityCollectionProcessor.buildPartialFunctionDefinition(
+        EntityCollectionProcessor.Result<BoardGameReference, BoardGameExpansion> filteringResult =
+            entityCollectionProcessor.apply(
                 boardGameReferences,
-                dataSourceId,
+                boardGame,
                 boardGameExpansionCollectionFilter,
-                BoardGameReference::getBoardGameId,
-                BoardGameExpansion::getExpanderBoardGameId
+                BoardGameReference::getBoardGame,
+                BoardGameExpansion::getExpander
             );
 
-        Collection<BoardGameExpansion> newBoardGameExpansions = wrapWithErrorHandling(() ->
-            boardGameExpansionRepository.saveAll(
-                partialFunctionDefinition.getUnmappedDomain().stream()
+        BiConsumer<BoardGameReference, BoardGameExpansion> boardGameExpansionConsumer =
+            (boardGameReference, boardGameExpansion) -> {
+                boardGameExpansion.setExpanded(boardGame);
+                boardGameExpansion.setExpander(boardGameReference.getBoardGame());
+            };
+
+        Collection<BoardGameExpansion> newBoardGameExpansions = boardGameExpansionRepository.saveAll(
+            filteringResult.getUnmapped().stream()
                 .map(
                     boardGameReference -> {
 
-                        BoardGameExpansion boardGameExpansion = new BoardGameExpansion();
-                        boardGameExpansion.setExpandedBoardGameId(boardGameId);
-                        boardGameExpansion.setExpanderBoardGameId(boardGameReference.getBoardGameId());
+                        BoardGameExpansion newBoardGameExpansion = new BoardGameExpansion();
+                        boardGameExpansionConsumer.accept(boardGameReference, newBoardGameExpansion);
 
-                        return boardGameExpansion;
+                        return newBoardGameExpansion;
+
                     }
                 )
                 .toList()
-            )
         );
 
-        Collection<BoardGameExpansion> existingBoardGameExpansions = partialFunctionDefinition.getImage();
+        filteringResult.getMappings().forEach(boardGameExpansionConsumer);
 
-        return Stream.concat(newBoardGameExpansions.stream(), existingBoardGameExpansions.stream()).toList();
+        return Stream.concat(newBoardGameExpansions.stream(), filteringResult.getMappings().values().stream()).toList();
 
     }
 

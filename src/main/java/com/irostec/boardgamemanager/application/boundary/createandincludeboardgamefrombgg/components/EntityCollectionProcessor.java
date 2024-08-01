@@ -6,6 +6,7 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
 import java.util.List;
@@ -16,17 +17,18 @@ import java.util.stream.Collectors;
 @Component
 public class EntityCollectionProcessor {
 
-    public <I, S, U, V> PartialFunctionDefinition<I, V> buildPartialFunctionDefinition(
+    @Transactional(readOnly = true)
+    public <I, P, K, O> Result<I, O> apply(
         Collection<I> inputs,
-        S sharedKey,
-        CollectionFilter<S, U, V, BoundaryException> collectionFilter,
-        Function<I, U> inputToUniqueKey,
-        Function<V, U> outputToUniqueKey
+        P parent,
+        CollectionFilter<P, K, O> collectionFilter,
+        Function<I, K> inputToUniqueKey,
+        Function<O, K> outputToUniqueKey
     ) throws BoundaryException {
 
-        Map<U, V> outputsByUniqueKey =
-            collectionFilter.findBySharedKeyAndUniqueKeysIn(
-                sharedKey,
+        Map<K, O> outputsByUniqueKey =
+            collectionFilter.findByParentAndUniqueKeysIn(
+                parent,
                 inputs.stream().map(inputToUniqueKey).toList()
             )
             .collect(Collectors.toMap(outputToUniqueKey, Function.identity()));
@@ -38,22 +40,22 @@ public class EntityCollectionProcessor {
                 )
             );
 
-        List<I> unmappedDomain = inputsPartitionedByStatus.get(false);
-        List<I> mappedDomain = inputsPartitionedByStatus.get(true);
-        Collection<V> image = outputsByUniqueKey.values();
+        List<I> unmapped = inputsPartitionedByStatus.get(false);
 
-        return new PartialFunctionDefinition<>(unmappedDomain, mappedDomain, image);
+        Map<I, O> mappings = inputsPartitionedByStatus.get(true).stream()
+            .collect(
+                Collectors.toMap(Function.identity(), input -> outputsByUniqueKey.get(inputToUniqueKey.apply(input)))
+            );
+
+        return new Result<>(unmapped, mappings);
 
     }
 
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
     @Getter
-    public static final class PartialFunctionDefinition<I, O> {
-
-        private final List<I> unmappedDomain;
-        private final List<I> mappedDomain;
-        private final Collection<O> image;
-
+    public static final class Result<I, O> {
+        private final List<I> unmapped;
+        private final Map<I, O> mappings;
     }
 
 }

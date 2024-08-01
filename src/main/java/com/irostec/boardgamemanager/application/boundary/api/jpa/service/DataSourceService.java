@@ -13,7 +13,7 @@ public class DataSourceService {
 
     private final CacheService cacheService;
 
-    public DataSource getDataSource(DataSourceName dataSourceName) throws BGMException {
+    public DataSource getDataSource(DataSourceName dataSourceName) {
 
         return this.cacheService.findDataSourceByName(dataSourceName);
 

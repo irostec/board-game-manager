@@ -20,8 +20,6 @@ import java.util.Comparator;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import static com.irostec.boardgamemanager.common.utility.Functions.wrapWithErrorHandling;
-
 @Component
 @AllArgsConstructor
 public class PublisherService {
@@ -43,26 +41,29 @@ public class PublisherService {
     private final EntityCollectionProcessor entityCollectionProcessor;
 
     private Collection<PublisherReference> savePublisherReferences(
-        Long dataSourceId,
+        DataSource dataSource,
         Collection<Link> links
     ) throws BoundaryException {
 
-        EntityCollectionProcessor.PartialFunctionDefinition<Link, PublisherReference> partialFunctionDefinition =
-            entityCollectionProcessor.buildPartialFunctionDefinition(
+        EntityCollectionProcessor.Result<Link, PublisherReference> filteringResult =
+            entityCollectionProcessor.apply(
                 links,
-                dataSourceId,
+                dataSource,
                 publisherReferenceCollectionFilter,
                 Link::id,
                 PublisherReference::getExternalId
             );
 
-        Collection<Publisher> newPublishers = wrapWithErrorHandling(() ->
-            publisherRepository.saveAll(
-                partialFunctionDefinition.getUnmappedDomain().stream()
-                    .map(LINK_TO_PUBLISHER)
-                    .toList()
-            )
+        Collection<Publisher> newPublishers = publisherRepository.saveAll(
+            filteringResult.getUnmapped().stream()
+                .map(LINK_TO_PUBLISHER)
+                .toList()
         );
+
+        filteringResult.getMappings().forEach(
+            (existingLink, existingPublisherReference) -> {
+                existingPublisherReference.getPublisher().setName(existingLink.value());
+            });
 
         Collection<ImmutablePair<Link, Publisher>> newLinksWithPublishers =
             Streams.zip(
@@ -72,73 +73,73 @@ public class PublisherService {
             )
             .toList();
 
-        Collection<PublisherReference> newPublisherReferences = wrapWithErrorHandling(() ->
-            publisherReferenceRepository.saveAll(
-                newLinksWithPublishers.stream().map(
-                    linkWithPublisher -> {
+        Collection<PublisherReference> newPublisherReferences = publisherReferenceRepository.saveAll(
+            newLinksWithPublishers.stream().map(
+                linkWithPublisher -> {
 
-                        PublisherReference publisherReference = new PublisherReference();
-                        publisherReference.setDataSourceId(dataSourceId);
-                        publisherReference.setPublisherId(linkWithPublisher.getRight().getId());
-                        publisherReference.setExternalId(linkWithPublisher.getLeft().id());
+                    PublisherReference publisherReference = new PublisherReference();
+                    publisherReference.setDataSource(dataSource);
+                    publisherReference.setPublisher(linkWithPublisher.getRight());
+                    publisherReference.setExternalId(linkWithPublisher.getLeft().id());
 
-                        return publisherReference;
-                    }
-                )
-                .toList()
+                    return publisherReference;
+                }
             )
+            .toList()
         );
 
-        Collection<PublisherReference> existingPublisherReferences = partialFunctionDefinition.getImage();
+        Collection<PublisherReference> existingPublisherReferences = filteringResult.getMappings().values();
 
         return Stream.concat(newPublisherReferences.stream(), existingPublisherReferences.stream()).toList();
 
     }
 
     private Collection<BoardGamePublisher> saveBoardGamePublishers(
-        long boardGameId,
+        BoardGame boardGame,
         Collection<PublisherReference> publisherReferences
     ) throws BoundaryException {
 
-        EntityCollectionProcessor.PartialFunctionDefinition<PublisherReference, BoardGamePublisher> partialFunctionDefinition =
-            entityCollectionProcessor.buildPartialFunctionDefinition(
-                publisherReferences, boardGameId, boardGamePublisherCollectionFilter, PublisherReference::getPublisherId, BoardGamePublisher::getPublisherId
+        EntityCollectionProcessor.Result<PublisherReference, BoardGamePublisher> filteringResult =
+            entityCollectionProcessor.apply(
+                publisherReferences,
+                boardGame,
+                boardGamePublisherCollectionFilter,
+                PublisherReference::getPublisher,
+                BoardGamePublisher::getPublisher
             );
 
-        Collection<BoardGamePublisher> newBoardGamePublishers = wrapWithErrorHandling(() ->
-            boardGamePublisherRepository.saveAll(
-                partialFunctionDefinition.getUnmappedDomain().stream()
-                    .map(
-                        publisherReference -> {
+        Collection<BoardGamePublisher> newBoardGamePublishers = boardGamePublisherRepository.saveAll(
+            filteringResult.getUnmapped().stream()
+                .map(
+                    publisherReference -> {
 
-                            BoardGamePublisher boardGamePublisher = new BoardGamePublisher();
-                            boardGamePublisher.setBoardGameId(boardGameId);
-                            boardGamePublisher.setPublisherId(publisherReference.getPublisherId());
+                        BoardGamePublisher boardGamePublisher = new BoardGamePublisher();
+                        boardGamePublisher.setBoardGame(boardGame);
+                        boardGamePublisher.setPublisher(publisherReference.getPublisher());
 
-                            return boardGamePublisher;
+                        return boardGamePublisher;
 
-                        }
-                    )
-                    .toList()
-            )
+                    }
+                )
+                .toList()
         );
 
-        Collection<BoardGamePublisher> existingBoardGamePublishers = partialFunctionDefinition.getImage();
+        Collection<BoardGamePublisher> existingBoardGamePublishers = filteringResult.getMappings().values();
 
         return Stream.concat(newBoardGamePublishers.stream(), existingBoardGamePublishers.stream()).toList();
 
     }
 
-    @Transactional(rollbackFor = Throwable.class)
+    @Transactional
     public Collection<BoardGamePublisher> saveBoardGamePublishers(
-        long boardGameId,
-        long dataSourceId,
+        BoardGame boardGame,
+        DataSource dataSource,
         Collection<Link> links
-    ) throws BoundaryException {
+    ) {
 
-        Collection<PublisherReference> publisherReferences = savePublisherReferences(dataSourceId, links);
+        Collection<PublisherReference> publisherReferences = savePublisherReferences(dataSource, links);
 
-        return saveBoardGamePublishers(boardGameId, publisherReferences);
+        return saveBoardGamePublishers(boardGame, publisherReferences);
 
     }
 

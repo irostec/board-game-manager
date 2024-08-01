@@ -1,20 +1,17 @@
 package com.irostec.boardgamemanager.application.boundary.api.jpa.service;
 
-import com.irostec.boardgamemanager.application.boundary.api.jpa.entity.BoardGameIntegration;
-import com.irostec.boardgamemanager.application.boundary.api.jpa.entity.BoardGameReference;
+import com.irostec.boardgamemanager.application.boundary.api.jpa.entity.*;
 import com.irostec.boardgamemanager.application.boundary.api.jpa.repository.BoardGameIntegrationRepository;
 import com.irostec.boardgamemanager.application.boundary.createandincludeboardgamefrombgg.components.EntityCollectionProcessor;
 import com.irostec.boardgamemanager.application.boundary.createandincludeboardgamefrombgg.components.filters.BoardGameIntegrationCollectionFilter;
 import com.irostec.boardgamemanager.application.core.shared.bggapi.output.Link;
-import com.irostec.boardgamemanager.common.error.BoundaryException;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
+import java.util.function.BiConsumer;
 import java.util.stream.Stream;
-
-import static com.irostec.boardgamemanager.common.utility.Functions.wrapWithErrorHandling;
 
 @Component
 @AllArgsConstructor
@@ -25,45 +22,49 @@ public class IntegrationService {
     private final BoardGameIntegrationCollectionFilter boardGameIntegrationCollectionFilter;
     private final EntityCollectionProcessor entityCollectionProcessor;
 
-    @Transactional(rollbackFor = Throwable.class)
+    @Transactional
     public Collection<BoardGameIntegration> saveBoardGameIntegrations(
-        long boardGameId,
-        Long dataSourceId,
+        BoardGame boardGame,
+        DataSource dataSource,
         Collection<Link> links
-    ) throws BoundaryException {
+    ) {
 
         Collection<BoardGameReference> boardGameReferences =
-            boardGameService.saveBoardGameReferences(dataSourceId, links);
+            boardGameService.saveBoardGameReferences(dataSource, links);
 
-        EntityCollectionProcessor.PartialFunctionDefinition<BoardGameReference, BoardGameIntegration> partialFunctionDefinition =
-            entityCollectionProcessor.buildPartialFunctionDefinition(
+        EntityCollectionProcessor.Result<BoardGameReference, BoardGameIntegration> filteringResult =
+            entityCollectionProcessor.apply(
                 boardGameReferences,
-                dataSourceId,
+                boardGame,
                 boardGameIntegrationCollectionFilter,
-                BoardGameReference::getBoardGameId,
-                BoardGameIntegration::getIntegratingBoardGameId
+                BoardGameReference::getBoardGame,
+                BoardGameIntegration::getIntegrating
             );
 
-        Collection<BoardGameIntegration> newBoardGameIntegrations = wrapWithErrorHandling(() ->
-            boardGameIntegrationRepository.saveAll(
-                partialFunctionDefinition.getUnmappedDomain().stream()
-                    .map(
-                        boardGameReference -> {
+        BiConsumer<BoardGameReference, BoardGameIntegration> boardGameIntegrationConsumer =
+            (boardGameReference, boardGameIntegration) -> {
+                boardGameIntegration.setIntegrated(boardGame);
+                boardGameIntegration.setIntegrating(boardGameReference.getBoardGame());
+            };
 
-                            BoardGameIntegration boardGameIntegration = new BoardGameIntegration();
-                            boardGameIntegration.setIntegratedBoardGameId(boardGameId);
-                            boardGameIntegration.setIntegratingBoardGameId(boardGameReference.getBoardGameId());
+        Collection<BoardGameIntegration> newBoardGameIntegrations = boardGameIntegrationRepository.saveAll(
+            filteringResult.getUnmapped().stream()
+                .map(
+                    boardGameReference -> {
 
-                            return boardGameIntegration;
-                        }
-                    )
-                    .toList()
-            )
+                        BoardGameIntegration newBoardGameIntegration = new BoardGameIntegration();
+                        boardGameIntegrationConsumer.accept(boardGameReference, newBoardGameIntegration);
+
+                        return newBoardGameIntegration;
+
+                    }
+                )
+                .toList()
         );
 
-        Collection<BoardGameIntegration> existingBoardGameIntegrations = partialFunctionDefinition.getImage();
+        filteringResult.getMappings().forEach(boardGameIntegrationConsumer);
 
-        return Stream.concat(newBoardGameIntegrations.stream(), existingBoardGameIntegrations.stream()).toList();
+        return Stream.concat(newBoardGameIntegrations.stream(), filteringResult.getMappings().values().stream()).toList();
 
     }
 

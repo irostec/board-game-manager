@@ -21,8 +21,6 @@ import java.util.Comparator;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import static com.irostec.boardgamemanager.common.utility.Functions.wrapWithErrorHandling;
-
 @Component
 @AllArgsConstructor
 public class ArtistService {
@@ -44,102 +42,105 @@ public class ArtistService {
     private final EntityCollectionProcessor entityCollectionProcessor;
 
     private Collection<ArtistReference> saveArtistReferences(
-        Long dataSourceId,
+        DataSource dataSource,
         Collection<Link> links
     ) throws BoundaryException {
 
-        EntityCollectionProcessor.PartialFunctionDefinition<Link, ArtistReference> partialFunctionDefinition =
-            entityCollectionProcessor.buildPartialFunctionDefinition(
+        EntityCollectionProcessor.Result<Link, ArtistReference> filteringResult =
+            entityCollectionProcessor.apply(
                 links,
-                dataSourceId,
+                dataSource,
                 artistReferenceCollectionFilter,
                 Link::id,
                 ArtistReference::getExternalId
             );
 
-        Collection<Artist> newDesigners = wrapWithErrorHandling(() ->
-            artistRepository.saveAll(
-                partialFunctionDefinition.getUnmappedDomain().stream()
-                    .map(LINK_TO_ARTIST)
-                    .toList()
-            )
+        Collection<Artist> newArtists = artistRepository.saveAll(
+            filteringResult.getUnmapped().stream()
+                .map(LINK_TO_ARTIST)
+                .toList()
         );
+
+        filteringResult.getMappings().forEach(
+            (existingLink, existingArtistReference) -> {
+                existingArtistReference.getArtist().setName(existingLink.value());
+            });
 
         Collection<ImmutablePair<Link, Artist>> newLinksWithArtists =
             Streams.zip(
                 links.stream().sorted(Comparator.comparing(Link::value)),
-                newDesigners.stream().sorted(Comparator.comparing(Artist::getName)),
+                newArtists.stream().sorted(Comparator.comparing(Artist::getName)),
                 ImmutablePair::of
             )
             .toList();
 
-        Collection<ArtistReference> newArtistReferences = wrapWithErrorHandling(() ->
-            artistReferenceRepository.saveAll(
-                newLinksWithArtists.stream().map(
-                    linkWithArtist -> {
+        Collection<ArtistReference> newArtistReferences = artistReferenceRepository.saveAll(
+            newLinksWithArtists.stream().map(
+                linkWithArtist -> {
 
-                        ArtistReference artistReference = new ArtistReference();
-                        artistReference.setDataSourceId(dataSourceId);
-                        artistReference.setArtistId(linkWithArtist.getRight().getId());
-                        artistReference.setExternalId(linkWithArtist.getLeft().id());
+                    ArtistReference artistReference = new ArtistReference();
+                    artistReference.setDataSource(dataSource);
+                    artistReference.setArtist(linkWithArtist.getRight());
+                    artistReference.setExternalId(linkWithArtist.getLeft().id());
 
-                        return artistReference;
-                    }
-                )
-                .toList()
+                    return artistReference;
+                }
             )
+            .toList()
         );
 
-        Collection<ArtistReference> existingArtistReferences = partialFunctionDefinition.getImage();
+        Collection<ArtistReference> existingArtistReferences = filteringResult.getMappings().values();
 
         return Stream.concat(newArtistReferences.stream(), existingArtistReferences.stream()).toList();
 
     }
 
     private Collection<BoardGameArtist> saveBoardGameArtists(
-        long boardGameId,
+        BoardGame boardGame,
         Collection<ArtistReference> artistReferences
     ) throws BoundaryException {
 
-        EntityCollectionProcessor.PartialFunctionDefinition<ArtistReference, BoardGameArtist> partialFunctionDefinition =
-            entityCollectionProcessor.buildPartialFunctionDefinition(
-                artistReferences, boardGameId, boardGameArtistCollectionFilter, ArtistReference::getArtistId, BoardGameArtist::getArtistId
+        EntityCollectionProcessor.Result<ArtistReference, BoardGameArtist> filteringResult =
+            entityCollectionProcessor.apply(
+                artistReferences,
+                boardGame,
+                boardGameArtistCollectionFilter,
+                ArtistReference::getArtist,
+                BoardGameArtist::getArtist
             );
 
-        Collection<BoardGameArtist> newBoardGameArtists = wrapWithErrorHandling(() ->
-            boardGameArtistRepository.saveAll(
-                partialFunctionDefinition.getUnmappedDomain().stream()
-                    .map(
-                        artistReference -> {
+        Collection<BoardGameArtist> newBoardGameArtists = boardGameArtistRepository.saveAll(
+            filteringResult.getUnmapped().stream()
+                .map(
+                    artistReference -> {
 
-                            BoardGameArtist boardGameArtist = new BoardGameArtist();
-                            boardGameArtist.setBoardGameId(boardGameId);
-                            boardGameArtist.setArtistId(artistReference.getArtistId());
+                        BoardGameArtist boardGameArtist = new BoardGameArtist();
+                        boardGameArtist.setBoardGame(boardGame);
+                        boardGameArtist.setArtist(artistReference.getArtist());
 
-                            return boardGameArtist;
+                        return boardGameArtist;
 
-                        }
-                    )
-                    .toList()
-            )
+                    }
+                )
+                .toList()
         );
 
-        Collection<BoardGameArtist> existingBoardGameArtists = partialFunctionDefinition.getImage();
+        Collection<BoardGameArtist> existingBoardGameArtists = filteringResult.getMappings().values();
 
         return Stream.concat(newBoardGameArtists.stream(), existingBoardGameArtists.stream()).toList();
 
     }
 
-    @Transactional(rollbackFor = Throwable.class)
+    @Transactional
     public Collection<BoardGameArtist> saveBoardGameArtists(
-        long boardGameId,
-        Long dataSourceId,
+        BoardGame boardGame,
+        DataSource dataSource,
         Collection<Link> links
-    ) throws BoundaryException {
+    ) {
 
-        Collection<ArtistReference> artistReferences = saveArtistReferences(dataSourceId, links);
+        Collection<ArtistReference> artistReferences = saveArtistReferences(dataSource, links);
 
-        return saveBoardGameArtists(boardGameId, artistReferences);
+        return saveBoardGameArtists(boardGame, artistReferences);
 
     }
 

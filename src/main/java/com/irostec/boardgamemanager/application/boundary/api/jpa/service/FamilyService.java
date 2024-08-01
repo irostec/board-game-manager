@@ -1,7 +1,6 @@
 package com.irostec.boardgamemanager.application.boundary.api.jpa.service;
 
-import com.irostec.boardgamemanager.application.boundary.api.jpa.entity.BoardGameFamily;
-import com.irostec.boardgamemanager.application.boundary.api.jpa.entity.Family;
+import com.irostec.boardgamemanager.application.boundary.api.jpa.entity.*;
 import com.irostec.boardgamemanager.application.boundary.api.jpa.repository.BoardGameFamilyRepository;
 import com.irostec.boardgamemanager.application.boundary.api.jpa.repository.FamilyRepository;
 import com.irostec.boardgamemanager.application.boundary.createandincludeboardgamefrombgg.components.EntityCollectionProcessor;
@@ -15,9 +14,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 import java.util.stream.Stream;
-
-import static com.irostec.boardgamemanager.common.utility.Functions.wrapWithErrorHandling;
 
 @Component
 @AllArgsConstructor
@@ -29,81 +28,92 @@ public class FamilyService {
     private final BoardGameFamilyCollectionFilter boardGameFamilyCollectionFilter;
     private final EntityCollectionProcessor entityCollectionProcessor;
 
-    private Collection<Family> saveFamilies(Long dataSourceId, Collection<Link> links)
-    throws BoundaryException {
+    private Collection<Family> saveFamilies(DataSource dataSource, Collection<Link> links) {
 
-        EntityCollectionProcessor.PartialFunctionDefinition<Link, Family> partialFunctionDefinition =
-            entityCollectionProcessor.buildPartialFunctionDefinition(
-                links, dataSourceId, familyCollectionFilter, Link::id, Family::getExternalId
+        EntityCollectionProcessor.Result<Link, Family> filteringResult =
+            entityCollectionProcessor.apply(
+                links, dataSource, familyCollectionFilter, Link::id, Family::getExternalId
             );
 
-        Collection<Family> newFamilies = wrapWithErrorHandling(() ->
-            familyRepository.saveAll(
-                partialFunctionDefinition.getUnmappedDomain().stream()
-                    .map(
-                        link -> {
+        BiConsumer<Link, Family> familyConsumer = (link, family) -> {
 
-                            Family family = new Family();
-                            family.setDataSourceId(dataSourceId);
-                            family.setExternalId(link.id());
-                            family.setName(link.value());
+            family.setDataSource(dataSource);
+            family.setExternalId(link.id());
+            family.setName(link.value());
 
-                            return family;
+        };
 
-                        }
-                    )
-                    .toList()
-            )
+        Collection<Family> newFamilies = familyRepository.saveAll(
+            filteringResult.getUnmapped().stream()
+                .map(
+                    link -> {
+
+                        Family newFamily = new Family();
+                        familyConsumer.accept(link, newFamily);
+
+                        return newFamily;
+
+                    }
+                )
+                .toList()
         );
 
-        Collection<Family> existingFamilies = partialFunctionDefinition.getImage();
+        filteringResult.getMappings().forEach(familyConsumer);
 
-        return Stream.concat(newFamilies.stream(), existingFamilies.stream()).toList();
+        return Stream.concat(newFamilies.stream(), filteringResult.getMappings().values().stream()).toList();
 
     }
 
-    private Collection<BoardGameFamily> saveBoardGameFamilies(Long boardGameId, Collection<Family> families)
-    throws BoundaryException {
+    private Collection<BoardGameFamily> saveBoardGameFamilies(BoardGame boardGame, Collection<Family> families) {
 
-        EntityCollectionProcessor.PartialFunctionDefinition<Family, BoardGameFamily> partialFunctionDefinition =
-            entityCollectionProcessor.buildPartialFunctionDefinition(
-                families, boardGameId, boardGameFamilyCollectionFilter, Family::getId, BoardGameFamily::getFamilyId
+        EntityCollectionProcessor.Result<Family, BoardGameFamily> filteringResult =
+            entityCollectionProcessor.apply(
+                families,
+                boardGame,
+                boardGameFamilyCollectionFilter,
+                Function.identity(),
+                BoardGameFamily::getFamily
             );
 
-        Collection<BoardGameFamily> newBoardGameFamilies = wrapWithErrorHandling(() ->
-            boardGameFamilyRepository.saveAll(
-                partialFunctionDefinition.getUnmappedDomain().stream()
-                    .map(
-                        family -> {
+        BiConsumer<Family, BoardGameFamily> familyConsumer =
+            (family, boardGameFamily) -> {
 
-                            BoardGameFamily boardGameFamily = new BoardGameFamily();
-                            boardGameFamily.setBoardGameId(boardGameId);
-                            boardGameFamily.setFamilyId(family.getId());
+                boardGameFamily.setBoardGame(boardGame);
+                boardGameFamily.setFamily(family);
 
-                            return boardGameFamily;
+            };
 
-                        }
-                    )
-                    .toList()
-            )
+        Collection<BoardGameFamily> newBoardGameFamilies = boardGameFamilyRepository.saveAll(
+            filteringResult.getUnmapped().stream()
+                .map(
+                    family -> {
+
+                        BoardGameFamily newBoardGameFamily = new BoardGameFamily();
+                        familyConsumer.accept(family, newBoardGameFamily);
+
+                        return newBoardGameFamily;
+
+                    }
+                )
+                .toList()
         );
 
-        Collection<BoardGameFamily> existingBoardGameFamilies = partialFunctionDefinition.getImage();
+        filteringResult.getMappings().forEach(familyConsumer);
 
-        return Stream.concat(newBoardGameFamilies.stream(), existingBoardGameFamilies.stream()).toList();
+        return Stream.concat(newBoardGameFamilies.stream(), filteringResult.getMappings().values().stream()).toList();
 
     }
 
-    @Transactional(rollbackFor = Throwable.class)
+    @Transactional
     public Collection<BoardGameFamily> saveBoardGameFamilies(
-        Long boardGameId,
-        Long dataSourceId,
+        BoardGame boardGame,
+        DataSource dataSource,
         Collection<Link> links
     ) throws BoundaryException {
 
-        Collection<Family> families = this.saveFamilies(dataSourceId, links);
+        Collection<Family> families = this.saveFamilies(dataSource, links);
 
-        return saveBoardGameFamilies(boardGameId, families);
+        return saveBoardGameFamilies(boardGame, families);
 
     }
 

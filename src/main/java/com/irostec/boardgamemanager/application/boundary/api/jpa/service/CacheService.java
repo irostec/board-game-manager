@@ -8,15 +8,12 @@ import com.irostec.boardgamemanager.application.boundary.api.jpa.repository.Imag
 import com.irostec.boardgamemanager.application.boundary.api.jpa.entity.DataSource;
 import com.irostec.boardgamemanager.application.boundary.api.jpa.repository.DataSourceRepository;
 
-import com.irostec.boardgamemanager.common.error.BGMException;
 import com.irostec.boardgamemanager.common.error.RequiredValueNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.cache.annotation.Cacheable;
 
 import java.util.Optional;
-
-import static com.irostec.boardgamemanager.common.utility.Functions.wrapWithErrorHandling;
 
 @Component
 @AllArgsConstructor
@@ -26,10 +23,9 @@ public final class CacheService {
     private final ImageTypeRepository imageTypeRepository;
 
     @Cacheable("dataSources")
-    public DataSource findDataSourceByName(DataSourceName name) throws BGMException {
+    public DataSource findDataSourceByName(DataSourceName name) {
 
-        Optional<DataSource> optionalDataSource =
-            wrapWithErrorHandling(() -> this.dataSourceRepository.findByName(name));
+        Optional<DataSource> optionalDataSource = this.dataSourceRepository.findByName(name);
 
         return optionalDataSource
                 .orElseThrow(() -> new RequiredValueNotFoundException("Data source not found: " + name.name()));
@@ -37,10 +33,9 @@ public final class CacheService {
     }
 
     @Cacheable("imageTypes")
-    public ImageType findImageTypeByName(ImageTypeName name) throws BGMException {
+    public ImageType findImageTypeByName(ImageTypeName name) {
 
-        Optional<ImageType> optionalImageType =
-            wrapWithErrorHandling(() -> this.imageTypeRepository.findByName(name));
+        Optional<ImageType> optionalImageType = this.imageTypeRepository.findByName(name);
 
         return optionalImageType
             .orElseThrow(() -> new RequiredValueNotFoundException("Image type not found: " + name.name()));

@@ -2,12 +2,15 @@ package com.irostec.boardgamemanager.application.boundary.api.jpa.entity;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
-import lombok.Data;
+import lombok.Getter;
 import lombok.Setter;
 
+import java.util.Objects;
+
 @Entity
-@Table(name = "board_game_category")
-@Data
+@Table(name = "image")
+@Getter
+@Setter
 public class Image {
 
     @Id
@@ -15,13 +18,36 @@ public class Image {
     @Setter(AccessLevel.NONE)
     private long id;
 
-    @Column(nullable = false)
-    private long imageTypeId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name="image_type_id", nullable=false)
+    private ImageType imageType;
 
-    @Column(nullable = false)
-    private long boardGameReferenceId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name="board_game_reference_id", nullable=false)
+    private BoardGameReference boardGameReference;
 
     @Column(nullable = false)
     private String url;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Image image = (Image) o;
+        return id == image.id && Objects.equals(url, image.url);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, url);
+    }
+
+    @Override
+    public String toString() {
+        return "Image{" +
+                "id=" + id +
+                ", url='" + url + '\'' +
+                '}';
+    }
 
 }

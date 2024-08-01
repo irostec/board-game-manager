@@ -29,6 +29,78 @@ databaseChangeLog:
               - column:
                   name: description
                   type: clob
+              - column:
+                  name: fixed_data_id
+                  type: bigint
+        - createTable:
+            catalogName: board_game_manager
+            schemaName: public
+            tableName: board_game_fixed_data
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: board_game_fixed_data_pk
+                  name: id
+                  type: bigint
+              - column:
+                  constraints:
+                    nullable: false
+                  name: year_of_publication
+                  type: smallint
+              - column:
+                  constraints:
+                    nullable: false
+                    checkConstraint: (minimum_players > 0)
+                  name: minimum_players
+                  type: smallint
+              - column:
+                  constraints:
+                    nullable: false
+                    checkConstraint: (maximum_players > 0)
+                  name: maximum_players
+                  type: smallint
+              - column:
+                  constraints:
+                    nullable: false
+                    checkConstraint: (average_playtime_in_minutes > 0)
+                  name: average_playtime_in_minutes
+                  type: smallint
+              - column:
+                  constraints:
+                    nullable: false
+                    checkConstraint: (minimum_playtime_in_minutes > 0)
+                  name: minimum_playtime_in_minutes
+                  type: smallint
+              - column:
+                  constraints:
+                    nullable: false
+                    checkConstraint: (maximum_playtime_in_minutes > 0)
+                  name: maximum_playtime_in_minutes
+                  type: smallint
+              - column:
+                  constraints:
+                    nullable: false
+                    checkConstraint: (minimum_age > 0)
+                  name: minimum_age
+                  type: smallint
+        - addForeignKeyConstraint:
+            baseColumnNames: fixed_data_id
+            baseTableCatalogName: board_game_manager
+            baseTableName: board_game
+            baseTableSchemaName: public
+            constraintName: board_game_fk1
+            deferrable: true
+            initiallyDeferred: true
+            onDelete: CASCADE
+            onUpdate: RESTRICT
+            referencedColumnNames: id
+            referencedTableCatalogName: board_game_manager
+            referencedTableName: board_game_fixed_data
+            referencedTableSchemaName: public
+            validate: true
 
         - createTable:
             catalogName: board_game_manager
@@ -190,89 +262,6 @@ databaseChangeLog:
             referencedTableCatalogName: board_game_manager
             referencedTableName: board_game
             referencedTableSchemaName: public
-            validate: true
-
-        - createTable:
-            catalogName: board_game_manager
-            schemaName: public
-            tableName: board_game_fixed_data
-            columns:
-              - column:
-                  autoIncrement: true
-                  constraints:
-                    nullable: false
-                    primaryKey: true
-                    primaryKeyName: board_game_fixed_data_pk
-                  name: id
-                  type: bigint
-              - column:
-                  constraints:
-                    nullable: false
-                  name: board_game_id
-                  type: bigint
-              - column:
-                  constraints:
-                    nullable: false
-                  name: year_of_publication
-                  type: smallint
-              - column:
-                  constraints:
-                    nullable: false
-                    checkConstraint: (minimum_players > 0)
-                  name: minimum_players
-                  type: smallint
-              - column:
-                  constraints:
-                    nullable: false
-                    checkConstraint: (maximum_players > 0)
-                  name: maximum_players
-                  type: smallint
-              - column:
-                  constraints:
-                    nullable: false
-                    checkConstraint: (average_playtime_in_minutes > 0)
-                  name: average_playtime_in_minutes
-                  type: smallint
-              - column:
-                  constraints:
-                    nullable: false
-                    checkConstraint: (minimum_playtime_in_minutes > 0)
-                  name: minimum_playtime_in_minutes
-                  type: smallint
-              - column:
-                  constraints:
-                    nullable: false
-                    checkConstraint: (maximum_playtime_in_minutes > 0)
-                  name: maximum_playtime_in_minutes
-                  type: smallint
-              - column:
-                  constraints:
-                    nullable: false
-                    checkConstraint: (minimum_age > 0)
-                  name: minimum_age
-                  type: smallint
-        - addForeignKeyConstraint:
-            baseColumnNames: board_game_id
-            baseTableCatalogName: board_game_manager
-            baseTableName: board_game_fixed_data
-            baseTableSchemaName: public
-            constraintName: board_game_fixed_data_fk1
-            deferrable: true
-            initiallyDeferred: true
-            onDelete: CASCADE
-            onUpdate: RESTRICT
-            referencedColumnNames: id
-            referencedTableCatalogName: board_game_manager
-            referencedTableName: board_game
-            referencedTableSchemaName: public
-            validate: true
-        - addUniqueConstraint:
-            catalogName: board_game_manager
-            columnNames: board_game_id
-            constraintName: board_game_fixed_data_chk1
-            indexName: board_game_fixed_data_idx1
-            schemaName: public
-            tableName: board_game_fixed_data
             validate: true
 
         - createTable:
@@ -456,14 +445,6 @@ databaseChangeLog:
             columnNames: board_game_id, data_source_id
             constraintName: board_game_reference_chk1
             indexName: board_game_reference_idx1
-            schemaName: public
-            tableName: board_game_reference
-            validate: true
-        - addUniqueConstraint:
-            catalogName: board_game_manager
-            columnNames: data_source_id, external_id
-            constraintName: board_game_reference_chk2
-            indexName: board_game_reference_idx2
             schemaName: public
             tableName: board_game_reference
             validate: true
@@ -1582,89 +1563,4 @@ databaseChangeLog:
             indexName: board_game_inclusion_detail_idx1
             schemaName: public
             tableName: board_game_inclusion_detail
-            validate: true
-        - createTable:
-            catalogName: board_game_manager
-            schemaName: public
-            tableName: board_game_rating
-            columns:
-              - column:
-                  autoIncrement: true
-                  constraints:
-                    nullable: false
-                    primaryKey: true
-                    primaryKeyName: board_game_rating_pk
-                  name: id
-                  type: bigint
-              - column:
-                  constraints:
-                    nullable: false
-                  name: board_game_inclusion_detail_id
-                  type: bigint
-              - column:
-                  constraints:
-                    nullable: false
-                    checkConstraint: (rating >= 0 AND rating <= 0)
-                  name: rating
-                  type: decimal
-        - addForeignKeyConstraint:
-            baseColumnNames: board_game_inclusion_detail_id
-            baseTableCatalogName: board_game_manager
-            baseTableName: board_game_rating
-            baseTableSchemaName: public
-            constraintName: board_game_rating_fk1
-            deferrable: true
-            initiallyDeferred: true
-            onDelete: CASCADE
-            onUpdate: RESTRICT
-            referencedColumnNames: id
-            referencedTableCatalogName: board_game_manager
-            referencedTableName: board_game_inclusion_detail
-            referencedTableSchemaName: public
-            validate: true
-        - addUniqueConstraint:
-            catalogName: board_game_manager
-            columnNames: board_game_inclusion_detail_id
-            constraintName: board_game_rating_chk1
-            indexName: board_game_rating_idx1
-            schemaName: public
-            tableName: board_game_rating
-            validate: true
-        - createTable:
-            catalogName: board_game_manager
-            schemaName: public
-            tableName: board_game_rating_comment
-            columns:
-              - column:
-                  autoIncrement: true
-                  constraints:
-                    nullable: false
-                    primaryKey: true
-                    primaryKeyName: board_game_rating_comment_pk
-                  name: id
-                  type: bigint
-              - column:
-                  constraints:
-                    nullable: false
-                  name: board_game_rating_id
-                  type: bigint
-              - column:
-                  constraints:
-                    nullable: false
-                  name: comment
-                  type: clob
-        - addForeignKeyConstraint:
-            baseColumnNames: board_game_rating_id
-            baseTableCatalogName: board_game_manager
-            baseTableName: board_game_rating_comment
-            baseTableSchemaName: public
-            constraintName: board_game_rating_comment_fk1
-            deferrable: true
-            initiallyDeferred: true
-            onDelete: CASCADE
-            onUpdate: RESTRICT
-            referencedColumnNames: id
-            referencedTableCatalogName: board_game_manager
-            referencedTableName: board_game_rating
-            referencedTableSchemaName: public
             validate: true

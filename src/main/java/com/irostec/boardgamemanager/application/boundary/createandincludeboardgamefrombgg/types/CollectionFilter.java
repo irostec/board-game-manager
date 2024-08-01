@@ -3,8 +3,8 @@ package com.irostec.boardgamemanager.application.boundary.createandincludeboardg
 import java.util.Collection;
 import java.util.stream.Stream;
 
-public interface CollectionFilter<K1, K2, V, E extends Exception> {
+public interface CollectionFilter<P, K, V> {
 
-    Stream<V> findBySharedKeyAndUniqueKeysIn(K1 sharedKey, Collection<K2> uniqueKeys) throws E;
+    Stream<V> findByParentAndUniqueKeysIn(P parent, Collection<K> uniqueKeys);
 
 }

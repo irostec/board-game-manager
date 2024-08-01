@@ -8,7 +8,6 @@ import com.irostec.boardgamemanager.application.core.shared.createboardgamefromb
 import com.irostec.boardgamemanager.application.core.shared.createboardgamefrombgg.input.BoardGameCreationRequest;
 import com.irostec.boardgamemanager.application.core.shared.createboardgamefrombgg.output.BoardGameSummary;
 import com.irostec.boardgamemanager.application.core.shared.getcurrentuser.output.User;
-import com.irostec.boardgamemanager.application.core.shared.includeboardgame.exception.IncludeBoardGameException;
 import com.irostec.boardgamemanager.application.core.shared.includeboardgame.input.RequestToIncludeBoardGame;
 import com.irostec.boardgamemanager.application.core.shared.includeboardgame.output.BoardGameInclusionResult;
 import lombok.AllArgsConstructor;
@@ -17,7 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Component
 @AllArgsConstructor
-class CreateAndIncludeBoardGameFromBGGService implements CreateAndIncludeBoardGameFromBGG {
+class CreateAndIncludeBoardGameFromBGGWithJPA implements CreateAndIncludeBoardGameFromBGG {
 
     private final GetCurrentUser getCurrentUser;
     private final CreateBoardGameFromBGG createBoardGameFromBGG;
@@ -51,9 +50,6 @@ class CreateAndIncludeBoardGameFromBGGService implements CreateAndIncludeBoardGa
         }
         catch (CreateBoardGameFromBGGException exception) {
             throw new BoardGameCreationException(exception);
-        }
-        catch (IncludeBoardGameException exception) {
-            throw new BoardGameInclusionException(exception);
         }
 
     }
